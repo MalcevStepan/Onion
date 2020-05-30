@@ -32,7 +32,7 @@ public class TorStatusView extends LinearLayout {
         if (i >= 0) status = status.substring(i + 1);
         status = status.trim();
 
-        TextView view = (TextView) findViewById(R.id.status);
+        TextView view = findViewById(R.id.status);
 
         String prefix = "Bootstrapped";
         if (status.contains("%") && status.length() > prefix.length() && status.startsWith(prefix)) {
@@ -51,17 +51,7 @@ public class TorStatusView extends LinearLayout {
 
         if (!isInEditMode()) {
             Tor tor = Tor.getInstance(getContext());
-            tor.setLogListener(new Tor.LogListener() {
-                @Override
-                public void onLog() {
-                    post(new Runnable() {
-                        @Override
-                        public void run() {
-                            update();
-                        }
-                    });
-                }
-            });
+            tor.setLogListener(() -> post(() -> update()));
             update();
         }
 

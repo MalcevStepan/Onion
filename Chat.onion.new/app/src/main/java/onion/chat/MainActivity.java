@@ -10,6 +10,7 @@
 
 package onion.chat;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity
         Client.getInstance(this).startSendPendingFriends();
     }
 
+    @SuppressLint("InflateParams")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity
         tor = Tor.getInstance(this);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -133,26 +135,17 @@ public class MainActivity extends AppCompatActivity
                     showQR();
                 }
             });
-            v.findViewById(R.id.qr_scan).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    d[0].cancel();
-                    scanQR();
-                }
+            v.findViewById(R.id.qr_scan).setOnClickListener(v12 -> {
+                d[0].cancel();
+                scanQR();
             });
-            v.findViewById(R.id.enter_id).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    d[0].cancel();
-                    addContact();
-                }
+            v.findViewById(R.id.enter_id).setOnClickListener(v13 -> {
+                d[0].cancel();
+                addContact();
             });
-            v.findViewById(R.id.share_id).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    d[0].cancel();
-                    inviteFriend();
-                }
+            v.findViewById(R.id.share_id).setOnClickListener(v14 -> {
+                d[0].cancel();
+                inviteFriend();
             });
             d[0] = new AlertDialog.Builder(MainActivity.this)
                     //.setTitle(R.string.add_contact)
@@ -161,12 +154,12 @@ public class MainActivity extends AppCompatActivity
 
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         startService(new Intent(this, HostService.class));
@@ -226,18 +219,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public ContactViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 final ContactViewHolder viewHolder = new ContactViewHolder(getLayoutInflater().inflate(R.layout.item_contact, parent, false));
-                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("chat:" + viewHolder.address.getText()), getApplicationContext(), ChatActivity.class));
-                    }
-                });
-                viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-                        contactLongPress(viewHolder.address.getText().toString(), viewHolder.name.getText().toString());
-                        return true;
-                    }
+                viewHolder.itemView.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("chat:" + viewHolder.address.getText()), getApplicationContext(), ChatActivity.class)));
+                viewHolder.itemView.setOnLongClickListener(v -> {
+                    contactLongPress(viewHolder.address.getText().toString(), viewHolder.name.getText().toString());
+                    return true;
                 });
                 return viewHolder;
             }
@@ -269,14 +254,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public ContactViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 final ContactViewHolder viewHolder = new ContactViewHolder(getLayoutInflater().inflate(R.layout.item_contact_request, parent, false));
-                viewHolder.accept.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String addr = viewHolder.address.getText().toString();
-                        db.acceptContact(addr);
-                        Client.getInstance(getApplicationContext()).startAskForNewMessages(addr);
-                        updateContactList();
-                    }
+                viewHolder.accept.setOnClickListener(v -> {
+                    String addr = viewHolder.address.getText().toString();
+                    db.acceptContact(addr);
+                    Client.getInstance(getApplicationContext()).startAskForNewMessages(addr);
+                    updateContactList();
                 });
                 viewHolder.decline.setOnClickListener(v -> {
                     final String address = viewHolder.address.getText().toString();
@@ -308,10 +290,10 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        tabLayout = findViewById(R.id.tabLayout);
 
 
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.viewPager);
+        final ViewPager viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new PagerAdapter() {
             @Override
             public int getCount() {
@@ -488,29 +470,20 @@ public class MainActivity extends AppCompatActivity
                 snack(getString(R.string.id_copied_to_clipboard) + address);
             }
         });
-        v.findViewById(R.id.delete).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dlg.hide();
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle(R.string.delete_contact_q)
-                        .setMessage(String.format(getString(R.string.really_delete_contact), address))
-                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                db.removeContact(address);
-                                updateContactList();
-                            }
-                        })
-                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                        .show();
-                //db.removeContact(address);
-                //updateContactList();
-            }
+        v.findViewById(R.id.delete).setOnClickListener(v1 -> {
+            dlg.hide();
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle(R.string.delete_contact_q)
+                    .setMessage(String.format(getString(R.string.really_delete_contact), address))
+                    .setPositiveButton(R.string.yes, (dialog, which) -> {
+                        db.removeContact(address);
+                        updateContactList();
+                    })
+                    .setNegativeButton(R.string.no, (dialog, which) -> {
+                    })
+                    .show();
+            //db.removeContact(address);
+            //updateContactList();
         });
 
         dlg.show();
@@ -588,15 +561,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     void update() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //((TextView) findViewById(R.id.myaddress)).setText(tor.getID());
-                //((TextView) findViewById(R.id.myname)).setText(db.getName().trim().isEmpty() ? "Anonymous" : db.getName());
-                updateContactList();
-                //updateBadge();
-            }
-        });
+        //((TextView) findViewById(R.id.myaddress)).setText(tor.getID());
+        //((TextView) findViewById(R.id.myname)).setText(db.getName().trim().isEmpty() ? "Anonymous" : db.getName());
+        //updateBadge();
+        runOnUiThread(this::updateContactList);
     }
 
     @Override
@@ -607,7 +575,7 @@ public class MainActivity extends AppCompatActivity
             update();
             send();
         });
-        Server.getInstance(this).setListener(() -> update());
+        Server.getInstance(this).setListener(this::update);
         update();
         send();
 
@@ -628,7 +596,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -1018,32 +986,26 @@ public class MainActivity extends AppCompatActivity
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_add_contact)
                 .setView(view)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String id = idEd.getText().toString().trim();
-                        if (id.length() != 16) {
-                            snack(getString(R.string.invalid_id));
-                            return;
-                        }
-                        if (id.equals(tor.getID())) {
-                            snack(getString(R.string.cant_add_self));
-                            return;
-                        }
-                        if (!db.addContact(id, true, false, aliasEd.getText().toString().trim())) {
-                            snack(getString(R.string.failed_to_add_contact));
-                            return;
-                        }
-                        snack(getString(R.string.contact_added));
-                        updateContactList();
-                        send();
-                        tabLayout.getTabAt(0).select();
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    String id1 = idEd.getText().toString().trim();
+                    if (id1.length() != 16) {
+                        snack(getString(R.string.invalid_id));
+                        return;
                     }
+                    if (id1.equals(tor.getID())) {
+                        snack(getString(R.string.cant_add_self));
+                        return;
+                    }
+                    if (!db.addContact(id1, true, false, aliasEd.getText().toString().trim())) {
+                        snack(getString(R.string.failed_to_add_contact));
+                        return;
+                    }
+                    snack(getString(R.string.contact_added));
+                    updateContactList();
+                    send();
+                    tabLayout.getTabAt(0).select();
                 })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
                 }).show();
 
     }
@@ -1056,12 +1018,12 @@ public class MainActivity extends AppCompatActivity
 
         public ContactViewHolder(View view) {
             super(view);
-            address = (TextView) view.findViewById(R.id.address);
-            name = (TextView) view.findViewById(R.id.name);
+            address = view.findViewById(R.id.address);
+            name = view.findViewById(R.id.name);
             accept = view.findViewById(R.id.accept);
             decline = view.findViewById(R.id.decline);
             badge = view.findViewById(R.id.badge);
-            if (badge != null) count = (TextView) view.findViewById(R.id.count);
+            if (badge != null) count = view.findViewById(R.id.count);
         }
     }
 

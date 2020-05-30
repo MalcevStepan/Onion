@@ -72,6 +72,9 @@
         android:layout_width="match_parent"
         android:layout_height="1dp" />
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <LinearLayout
         android:paddingTop="1dp"
         android:paddingLeft="4dp"
@@ -94,7 +97,15 @@
             android:id="@+id/editmessage" />
 
         -->
-
+        <ImageButton
+            android:background="?selectableItemBackground"
+            android:src="@drawable/attach"
+            android:layout_gravity="bottom"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/send"
+            android:id="@+id/attachment"/>
 
         <EditText
             android:maxLength="1000"
@@ -125,7 +136,26 @@
             android:layout_height="wrap_content"
             android:text="@string/send"
             android:id="@+id/send" />
+        <ImageButton
+            android:background="?selectableItemBackground"
+            android:src="@drawable/microphone"
+            android:layout_gravity="bottom"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/send"
+            android:id="@+id/micro"/>
 
     </LinearLayout>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="30dp"
+            android:src="@drawable/dot"
+            android:id="@+id/redCircle"
+            android:visibility="gone"
+            android:layout_marginLeft="30dp" />
+    </FrameLayout>
 
 </LinearLayout>
