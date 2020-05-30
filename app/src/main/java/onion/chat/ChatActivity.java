@@ -200,27 +200,27 @@ public class ChatActivity extends AppCompatActivity {
 
 		// RECORDING AND SENDING AUDIO MESSAGE
 		micro.setOnTouchListener((view, motionEvent) -> {
-			switch (motionEvent.getActionMasked()) {
-				case MotionEvent.ACTION_DOWN:
-					if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-						ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
-								RECORD_AUDIO);
-					else recordStart();
-
-					redCircle.setVisibility(View.VISIBLE);
-					redCircle.startAnimation(redCircleAnim);
-					edit.setVisibility(View.INVISIBLE);
-					attach.setVisibility(View.INVISIBLE);
-					send.setVisibility(View.INVISIBLE);
-					break;
-				case MotionEvent.ACTION_UP:
-					recordStop();
-					redCircle.setVisibility(View.INVISIBLE);
-					edit.setVisibility(View.VISIBLE);
-					attach.setVisibility(View.VISIBLE);
-					send.setVisibility(View.VISIBLE);
-					break;
-			}
+			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+						RECORD_AUDIO);
+			else
+				switch (motionEvent.getActionMasked()) {
+					case MotionEvent.ACTION_DOWN:
+						recordStart();
+						redCircle.setVisibility(View.VISIBLE);
+						redCircle.startAnimation(redCircleAnim);
+						edit.setVisibility(View.INVISIBLE);
+						attach.setVisibility(View.INVISIBLE);
+						send.setVisibility(View.INVISIBLE);
+						break;
+					case MotionEvent.ACTION_UP:
+						recordStop();
+						redCircle.setVisibility(View.INVISIBLE);
+						edit.setVisibility(View.VISIBLE);
+						attach.setVisibility(View.VISIBLE);
+						send.setVisibility(View.VISIBLE);
+						break;
+				}
 			return false;
 		});
 
