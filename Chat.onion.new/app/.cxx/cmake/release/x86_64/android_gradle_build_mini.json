@@ -1,19 +1,19 @@
 {
   "buildFiles": [
     "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake",
-    "C:\\Users\\Stepan\\Desktop\\Chat.onion.new\\app\\src\\main\\jni\\CMakeLists.txt",
+    "C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\src\\main\\jni\\CMakeLists.txt",
     "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\android.toolchain.cmake"
   ],
   "cleanCommands": [
-    "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Desktop\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" clean"
+    "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" clean"
   ],
-  "buildTargetsCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"C:\\Users\\Stepan\\Desktop\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" {LIST_OF_TARGETS_TO_BUILD}",
+  "buildTargetsCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" {LIST_OF_TARGETS_TO_BUILD}",
   "libraries": {
     "app-Release-x86_64": {
       "artifactName": "app",
-      "buildCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Desktop\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" app",
+      "buildCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\release\\x86_64\" app",
       "abi": "x86_64",
-      "output": "C:\\Users\\Stepan\\Desktop\\Chat.onion.new\\app\\build\\intermediates\\cmake\\release\\obj\\x86_64\\libapp.so",
+      "output": "C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\build\\intermediates\\cmake\\release\\obj\\x86_64\\libapp.so",
       "runtimeFiles": []
     }
   }

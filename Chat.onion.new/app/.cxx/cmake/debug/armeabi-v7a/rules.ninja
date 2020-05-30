@@ -42,7 +42,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = C:\Users\Stepan\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe -HC:\Users\Stepan\Desktop\Chat.onion.new\app\src\main\jni -BC:\Users\Stepan\Desktop\Chat.onion.new\app\.cxx\cmake\debug\armeabi-v7a
+  command = C:\Users\Stepan\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\cmake.exe -HC:\Users\Stepan\Onion\Chat.onion.new\app\src\main\jni -BC:\Users\Stepan\Onion\Chat.onion.new\app\.cxx\cmake\debug\armeabi-v7a
   description = Re-running CMake...
   generator = 1
 
