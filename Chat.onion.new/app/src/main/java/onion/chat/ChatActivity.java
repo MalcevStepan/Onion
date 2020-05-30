@@ -10,8 +10,10 @@
 
 package onion.chat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -19,6 +21,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,8 +41,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.spongycastle.pqc.crypto.gmss.GMSSRootCalc;
-
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -49,6 +50,7 @@ import java.util.TimerTask;
 
 public class ChatActivity extends AppCompatActivity {
 
+	public static final int RECORD_AUDIO = 0;
 	private MediaRecorder mediaRecorder;
 	private MediaPlayer mediaPlayer;
 	private File media;
@@ -138,7 +140,7 @@ public class ChatActivity extends AppCompatActivity {
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
-		media = new File(this.getCacheDir().getPath(), "media");
+		media = new File(this.getCacheDir().getAbsolutePath() + "/Media/");
 		media.mkdir();
 
 		client = Client.getInstance(this);
@@ -200,7 +202,11 @@ public class ChatActivity extends AppCompatActivity {
 		micro.setOnTouchListener((view, motionEvent) -> {
 			switch (motionEvent.getActionMasked()) {
 				case MotionEvent.ACTION_DOWN:
-					recordStart();
+					if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+						ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+								RECORD_AUDIO);
+					else recordStart();
+
 					redCircle.setVisibility(View.VISIBLE);
 					redCircle.startAnimation(redCircleAnim);
 					edit.setVisibility(View.INVISIBLE);
@@ -251,18 +257,25 @@ public class ChatActivity extends AppCompatActivity {
 	public void recordStart() {
 		try {
 			releaseRecorder();
-			File record = new File(media.getPath() + "/record.3gpp");
+			Log.i("LOADING", "released");
+			File record = new File(media.getAbsolutePath() + "/record.3gpp");
+			Log.i("LOADING", "createdFile");
 			if (record.exists()) {
 				record.delete();
 			}
 
 			mediaRecorder = new MediaRecorder();
+			Log.i("LOADING", "new media");
 			mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 			mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
 			mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-			mediaRecorder.setOutputFile(record.getPath());
+			mediaRecorder.setOutputFile(record.getAbsolutePath());
+			Log.i("LOADING", "setOutput");
 			mediaRecorder.prepare();
+			Log.i("LOADING", "prepared");
 			mediaRecorder.start();
+			Log.i("LOADING", "start");
+			Toast.makeText(this, "Recording", Toast.LENGTH_SHORT).show();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -279,7 +292,7 @@ public class ChatActivity extends AppCompatActivity {
 		try {
 			releasePlayer();
 			mediaPlayer = new MediaPlayer();
-			mediaPlayer.setDataSource(media.getPath() + "/record.3gpp");
+			mediaPlayer.setDataSource(media.getAbsolutePath() + "/record.3gpp");
 			mediaPlayer.prepare();
 			mediaPlayer.start();
 		} catch (Exception e) {

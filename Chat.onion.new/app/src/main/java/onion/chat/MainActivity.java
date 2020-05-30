@@ -128,12 +128,9 @@ public class MainActivity extends AppCompatActivity
 
             View v = getLayoutInflater().inflate(R.layout.dialog_connect, null);
             ((TextView) v.findViewById(R.id.id)).setText(Tor.getInstance(MainActivity.this).getID());
-            v.findViewById(R.id.qr_show).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    d[0].cancel();
-                    showQR();
-                }
+            v.findViewById(R.id.qr_show).setOnClickListener(v15 -> {
+                d[0].cancel();
+                showQR();
             });
             v.findViewById(R.id.qr_scan).setOnClickListener(v12 -> {
                 d[0].cancel();
