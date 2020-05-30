@@ -1,0 +1,7 @@
+Executable : C:\Users\Stepan\AppData\Local\Android\Sdk\cmake\3.10.2.4988404\bin\ninja.exe
+arguments : 
+-C
+C:\Users\Stepan\Desktop\Chat.onion.new\app\.cxx\cmake\debug\x86
+app
+jvmArgs : 
+

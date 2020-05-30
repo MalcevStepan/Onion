@@ -1,0 +1,160 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="onion.blog.MainBlogActivity">
+
+
+
+    <!--
+    <item
+        android:visible="false"
+        android:id="@+id/action_add_post"
+        android:icon="@drawable/ic_edit_white_24dp"
+        android:title="Write Post"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+        -->
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_photo"
+        android:icon="@drawable/ic_insert_photo_white_24dp"
+        android:title="Опубликовать изображение"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+
+<!--
+
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share_white_24dp"
+        android:title="Address"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+
+-->
+
+
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_camera"
+        android:icon="@drawable/ic_photo_camera_white_24dp"
+        android:title="Сделать фотографию"
+        android:orderInCategory="100"
+        app:showAsAction="always" />
+
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_blog_title"
+        android:title="Изменить заголовок блога"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item
+        android:visible="false"
+        android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+
+
+
+
+
+
+<!--
+    <item
+        android:id="@+id/action_add_post"
+        android:title="Write Post" />
+
+
+    <item
+        android:id="@+id/action_share"
+        android:title="Share Address" />
+
+
+    <item
+        android:id="@+id/action_style"
+        android:title="Change Style" />
+
+    <item
+        android:id="@+id/about"
+        android:title="About This App" />
+
+    <item
+        android:id="@+id/rate"
+        android:title="Rate This App" />
+-->
+
+
+<!--
+    <item
+        android:id="@+id/action_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/action_add_post"
+        android:title="Write" />
+
+    <item
+        android:id="@+id/action_share"
+        android:title="Share" />
+
+    <item
+        android:id="@+id/action_style"
+        android:title="Style" />
+
+    <item
+        android:id="@+id/about"
+        android:title="About" />
+
+    <item
+        android:id="@+id/rate"
+        android:title="Rate" />
+-->
+
+
+
+
+    <item
+        android:id="@+id/action_share"
+        android:title="Адрес" />
+
+
+
+
+    <item
+        android:id="@+id/action_home"
+        android:title="Домой" />
+
+
+
+
+
+    <item
+        android:id="@+id/action_add_post"
+        android:title="Написать" />
+
+    <item
+        android:id="@+id/action_style"
+        android:title="Стиль" />
+
+
+
+    <item
+        android:id="@+id/about"
+        android:title="Подробнее" />
+
+    <item
+        android:id="@+id/rate"
+        android:title="Оцените это приложение" />
+
+    <item
+        android:id="@+id/share"
+        android:title="Поделиться этим приложением" />
+
+</menu>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText
+            android:inputType="textCapWords|textAutoComplete|textAutoCorrect"
+            android:imeOptions="flagNoExtractUi"
+            android:hint="Title"
+            android:singleLine="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/title" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText
+            android:inputType="textCapSentences|textAutoComplete|textAutoCorrect|textMultiLine|textLongMessage"
+            android:imeOptions="flagNoExtractUi"
+            android:hint="Текст"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/content" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:id="@+id/image" />
+
+</LinearLayout>

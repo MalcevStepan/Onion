@@ -1,0 +1,4 @@
+ninja: Entering directory `C:\Users\Stepan\Desktop\Chat.onion.new\app\.cxx\cmake\debug\armeabi-v7a'
+[1/2] Building CXX object CMakeFiles/app.dir/source_file.cpp.o
+clang++: warning: argument unused during compilation: '-s' [-Wunused-command-line-argument]
+[2/2] Linking CXX shared library C:\Users\Stepan\Desktop\Chat.onion.new\app\build\intermediates\cmake\debug\obj\armeabi-v7a\libapp.so

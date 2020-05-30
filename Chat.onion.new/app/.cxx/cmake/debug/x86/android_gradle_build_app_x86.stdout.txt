@@ -1,0 +1,2 @@
+ninja: Entering directory `C:\Users\Stepan\Desktop\Chat.onion.new\app\.cxx\cmake\debug\x86'
+ninja: no work to do.

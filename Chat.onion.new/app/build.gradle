@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 29
+    //noinspection GradleDependency
+    buildToolsVersion '25.0.0'
+
+    defaultConfig {
+        applicationId "onion.chat"
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 9
+        versionName "9"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-fexceptions -s"
+            }
+        }
+    }
+    buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/jni/CMakeLists.txt"
+            version "3.10.2"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    ndkVersion '21.0.6113669'
+}
+
+dependencies {
+    //compile files('libs/bcpkix-jdk12-153.jar')
+    //compile files('jce-jdk12-153.jar')
+    implementation files('libs/core-1.52.0.0.jar')
+    implementation files('libs/prov-1.52.0.0.jar')
+    implementation files('libs/commons-codec-1.10.jar')
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':blog_app')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.google.zxing:core:3.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+}
