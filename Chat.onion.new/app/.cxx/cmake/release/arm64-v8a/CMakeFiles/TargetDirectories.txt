@@ -1,3 +1,0 @@
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/release/arm64-v8a/CMakeFiles/app.dir
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/release/arm64-v8a/CMakeFiles/edit_cache.dir
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/release/arm64-v8a/CMakeFiles/rebuild_cache.dir

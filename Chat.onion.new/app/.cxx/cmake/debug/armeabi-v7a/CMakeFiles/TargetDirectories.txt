@@ -1,3 +1,0 @@
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/debug/armeabi-v7a/CMakeFiles/app.dir
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/debug/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/Stepan/Onion/Chat.onion.new/app/.cxx/cmake/debug/armeabi-v7a/CMakeFiles/rebuild_cache.dir

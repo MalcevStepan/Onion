@@ -1,19 +1,19 @@
 {
   "buildFiles": [
-    "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake",
-    "C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\src\\main\\jni\\CMakeLists.txt",
-    "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\ndk\\21.0.6113669\\build\\cmake\\android.toolchain.cmake"
+    "D:\\Android\\SDK\\ndk\\21.0.6113669\\build\\cmake\\platforms.cmake",
+    "D:\\Android\\SDK\\ndk\\21.0.6113669\\build\\cmake\\android.toolchain.cmake",
+    "C:\\Users\\danil\\Documents\\GitHub\\Onion\\Chat.onion.new\\app\\src\\main\\jni\\CMakeLists.txt"
   ],
   "cleanCommands": [
-    "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" clean"
+    "D:\\Android\\SDK\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\danil\\Documents\\GitHub\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" clean"
   ],
-  "buildTargetsCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" {LIST_OF_TARGETS_TO_BUILD}",
+  "buildTargetsCommand": "D:\\Android\\SDK\\cmake\\3.10.2.4988404\\bin\\ninja.exe  -C \"C:\\Users\\danil\\Documents\\GitHub\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" {LIST_OF_TARGETS_TO_BUILD}",
   "libraries": {
     "app-Debug-x86": {
       "artifactName": "app",
-      "buildCommand": "C:\\Users\\Stepan\\AppData\\Local\\Android\\Sdk\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" app",
+      "buildCommand": "D:\\Android\\SDK\\cmake\\3.10.2.4988404\\bin\\ninja.exe -C \"C:\\Users\\danil\\Documents\\GitHub\\Onion\\Chat.onion.new\\app\\.cxx\\cmake\\debug\\x86\" app",
       "abi": "x86",
-      "output": "C:\\Users\\Stepan\\Onion\\Chat.onion.new\\app\\build\\intermediates\\cmake\\debug\\obj\\x86\\libapp.so",
+      "output": "C:\\Users\\danil\\Documents\\GitHub\\Onion\\Chat.onion.new\\app\\build\\intermediates\\cmake\\debug\\obj\\x86\\libapp.so",
       "runtimeFiles": []
     }
   }
