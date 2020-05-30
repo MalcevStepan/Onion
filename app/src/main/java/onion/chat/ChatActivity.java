@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
@@ -206,6 +207,7 @@ public class ChatActivity extends AppCompatActivity {
 			else
 				switch (motionEvent.getActionMasked()) {
 					case MotionEvent.ACTION_DOWN:
+						pressTime = System.currentTimeMillis();
 						recordStart();
 						redCircle.setVisibility(View.VISIBLE);
 						redCircle.startAnimation(redCircleAnim);
@@ -213,12 +215,24 @@ public class ChatActivity extends AppCompatActivity {
 						attach.setVisibility(View.INVISIBLE);
 						send.setVisibility(View.INVISIBLE);
 						break;
+					case MotionEvent.ACTION_CANCEL:
 					case MotionEvent.ACTION_UP:
-						recordStop();
-						redCircle.setVisibility(View.INVISIBLE);
-						edit.setVisibility(View.VISIBLE);
-						attach.setVisibility(View.VISIBLE);
-						send.setVisibility(View.VISIBLE);
+						if (System.currentTimeMillis() - pressTime > 1500) {
+							recordStop();
+							redCircle.setVisibility(View.INVISIBLE);
+							edit.setVisibility(View.VISIBLE);
+							attach.setVisibility(View.VISIBLE);
+							send.setVisibility(View.VISIBLE);
+						} else {
+							final Handler handler = new Handler();
+							handler.postDelayed(() -> {
+								recordStop();
+								redCircle.setVisibility(View.INVISIBLE);
+								edit.setVisibility(View.VISIBLE);
+								attach.setVisibility(View.VISIBLE);
+								send.setVisibility(View.VISIBLE);
+							}, 1500 - System.currentTimeMillis() + pressTime);
+						}
 						break;
 				}
 			return false;
@@ -253,6 +267,8 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 	}
+
+	private long pressTime;
 
 	public void recordStart() {
 		try {
