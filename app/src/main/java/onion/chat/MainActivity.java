@@ -67,6 +67,7 @@ import com.google.zxing.qrcode.encoder.QRCode;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import onion.blog.MainBlogActivity;
 
@@ -413,7 +414,7 @@ public class MainActivity extends AppCompatActivity
             contactCursor = null;
         }
         contactCursor = db.getReadableDatabase().query("contacts", new String[]{"address", "name", "pending"}, "incoming=0", null, null, null, "incoming, name, address");
-        contactRecycler.getAdapter().notifyDataSetChanged();
+        Objects.requireNonNull(contactRecycler.getAdapter()).notifyDataSetChanged();
         contactEmpty.setVisibility(contactCursor.getCount() == 0 ? View.VISIBLE : View.INVISIBLE);
 
         if (requestCursor != null) {
@@ -421,7 +422,7 @@ public class MainActivity extends AppCompatActivity
             requestCursor = null;
         }
         requestCursor = db.getReadableDatabase().query("contacts", new String[]{"address", "name"}, "incoming!=0", null, null, null, "incoming, name, address");
-        requestRecycler.getAdapter().notifyDataSetChanged();
+        Objects.requireNonNull(requestRecycler.getAdapter()).notifyDataSetChanged();
         requestEmpty.setVisibility(requestCursor.getCount() == 0 ? View.VISIBLE : View.INVISIBLE);
 
 
@@ -445,27 +446,18 @@ public class MainActivity extends AppCompatActivity
                 .setView(v)
                 .create();
 
-        v.findViewById(R.id.openchat).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dlg.hide();
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("chat:" + address), getApplicationContext(), ChatActivity.class));
-            }
+        v.findViewById(R.id.openchat).setOnClickListener(v12 -> {
+            dlg.hide();
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("chat:" + address), getApplicationContext(), ChatActivity.class));
         });
-        v.findViewById(R.id.changename).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dlg.hide();
-                changeContactName(address, name);
-            }
+        v.findViewById(R.id.changename).setOnClickListener(v14 -> {
+            dlg.hide();
+            changeContactName(address, name);
         });
-        v.findViewById(R.id.copyid).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dlg.hide();
-                ((android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setText(address);
-                snack(getString(R.string.id_copied_to_clipboard) + address);
-            }
+        v.findViewById(R.id.copyid).setOnClickListener(v13 -> {
+            dlg.hide();
+            ((android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE)).setText(address);
+            snack(getString(R.string.id_copied_to_clipboard) + address);
         });
         v.findViewById(R.id.delete).setOnClickListener(v1 -> {
             dlg.hide();
@@ -761,16 +753,8 @@ public class MainActivity extends AppCompatActivity
                 .setTitle(getString(R.string.app_name))
                         //.setMessage(BuildConfig.APPLICATION_ID + "\n\nVersion: " + BuildConfig.VERSION_NAME)
                 .setMessage("Version: " + BuildConfig.VERSION_NAME)
-                .setNeutralButton(R.string.libraries, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        showLibraries();
-                    }
-                })
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                    }
+                .setNeutralButton(R.string.libraries, (dialog, which) -> showLibraries())
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
                 })
                 .show();
     }
@@ -858,6 +842,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK)
             return;
         if (requestCode == REQUEST_QR) {
@@ -954,13 +939,10 @@ public class MainActivity extends AppCompatActivity
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_change_alias)
                 .setView(view)
-                .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        db.setName(editText.getText().toString().trim());
-                        update();
-                        snack(getString(R.string.snack_alias_changed));
-                    }
+                .setPositiveButton(R.string.apply, (dialog, which) -> {
+                    db.setName(editText.getText().toString().trim());
+                    update();
+                    snack(getString(R.string.snack_alias_changed));
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override

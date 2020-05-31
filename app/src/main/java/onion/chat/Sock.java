@@ -178,9 +178,25 @@ public class Sock {
                 log("timeout");
                 try {
                     sock.close();
-                } catch (IOException ex2) {
+                } catch (IOException ignored) {
                 }
-            } catch (Exception ex) {
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    public void writeAudio(byte[] audio){
+        if(writer!=null){
+            char[] content = new char[audio.length];
+            for (int i = 0; i < audio.length; i++) content[i] = (char)audio[i];
+            try {
+                writer.write(content);
+            }catch (IOException io){
+                log("timeout");
+                try {
+                    sock.close();
+                } catch (IOException ignored) {
+                }
             }
         }
     }
@@ -213,6 +229,12 @@ public class Sock {
 
     public boolean queryBool(String... request) {
         writeLine(request);
+        flush();
+        return readBool();
+    }
+    public boolean queryBoolAudio(byte[] audio, String... request) {
+        writeLine(request);
+        writeAudio(audio);
         flush();
         return readBool();
     }

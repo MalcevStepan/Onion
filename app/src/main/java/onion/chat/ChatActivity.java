@@ -17,8 +17,11 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
@@ -26,6 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
@@ -39,24 +43,41 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class ChatActivity extends AppCompatActivity {
 
 	public static final int RECORD_AUDIO = 0;
+	public static final int GALLERY_SUCCESS = 1;
+	public static final int TAKE_PHOTO_SUCCESS = 2;
+	public static final int CAPTURE_SUCCESS = 3;
+
 	private MediaRecorder mediaRecorder;
 	private MediaPlayer mediaPlayer;
-	private File media;
+	private String pathToAudio;
+	private String pathToPhotoAndVideo;
 	ChatAdapter adapter;
 	RecyclerView recycler;
+	ImageView video, micro, photo, send, gallery;
+	EditText edit;
+	TextView noMessages;
 	Cursor cursor;
 	Database db;
 	Tor tor;
@@ -65,13 +86,13 @@ public class ChatActivity extends AppCompatActivity {
 
 	String myname = "", othername = "";
 
-	long idLastLast = -1;
+	long idMsgLastLast = -1;
 
 	long rep = 0;
 	Timer timer;
 
 	void update() {
-		Cursor oldCursor = cursor;
+		Cursor oldMsgCursor = cursor;
 
 		myname = db.getName().trim();
 		othername = db.getContactName(address).trim();
@@ -85,18 +106,18 @@ public class ChatActivity extends AppCompatActivity {
 		cursor = db.getMessages(a, b);
 
 		cursor.moveToLast();
-		long idLast = -1;
+		long idMsgLast = -1;
 
 		int i = cursor.getColumnIndex("_id");
 		if (i >= 0 && cursor.getCount() > 0) {
-			idLast = cursor.getLong(i);
+			idMsgLast = cursor.getLong(i);
 		}
 
 		//if(oldCursor == null || cursor.getCount() != oldCursor.getCount())
-		if (idLast != idLastLast) {
-			idLastLast = idLast;
+		if (idMsgLast != idMsgLastLast) {
+			idMsgLastLast = idMsgLast;
 
-			if (oldCursor == null || oldCursor.getCount() == 0)
+			if (oldMsgCursor == null || oldMsgCursor.getCount() == 0)
 				recycler.scrollToPosition(Math.max(0, cursor.getCount() - 1));
 			else
 				recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
@@ -106,10 +127,10 @@ public class ChatActivity extends AppCompatActivity {
 
 		adapter.notifyDataSetChanged();
 
-		if (oldCursor != null)
-			oldCursor.close();
+		if (oldMsgCursor != null)
+			oldMsgCursor.close();
 
-		findViewById(R.id.noMessages).setVisibility(cursor.getCount() > 0 ? View.GONE : View.VISIBLE);
+		noMessages.setVisibility(cursor.getCount() > 0 ? View.GONE : View.VISIBLE);
 	}
 
 	void sendPendingAndUpdate() {
@@ -119,6 +140,7 @@ public class ChatActivity extends AppCompatActivity {
 		update();
 	}
 
+	@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -141,13 +163,19 @@ public class ChatActivity extends AppCompatActivity {
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
-		media = new File(this.getCacheDir().getAbsolutePath() + "/Media/");
-		media.mkdir();
+		pathToAudio = this.getCacheDir().getAbsolutePath() + "/Media/Audio/";
+		pathToPhotoAndVideo = this.getCacheDir().getAbsolutePath() + "/Media/Video";
+		new File(pathToAudio).mkdirs();
+		new File(pathToPhotoAndVideo).mkdir();
 
+		send = findViewById(R.id.send);
+		edit = findViewById(R.id.editmessage);
+		noMessages = findViewById(R.id.noMessages);
 		client = Client.getInstance(this);
 
 		address = getIntent().getDataString();
 
+		assert address != null;
 		if (address.contains(":"))
 			address = address.substring(address.indexOf(':') + 1);
 
@@ -155,9 +183,9 @@ public class ChatActivity extends AppCompatActivity {
 
 		String name = db.getContactName(address);
 		if (name.isEmpty()) {
-			getSupportActionBar().setTitle(address);
+			Objects.requireNonNull(getSupportActionBar()).setTitle(address);
 		} else {
-			getSupportActionBar().setTitle(name);
+			Objects.requireNonNull(getSupportActionBar()).setTitle(name);
 			getSupportActionBar().setSubtitle(address);
 		}
 
@@ -168,11 +196,9 @@ public class ChatActivity extends AppCompatActivity {
 		adapter = new ChatAdapter();
 		recycler.setAdapter(adapter);
 
-		final View micro = findViewById(R.id.micro);
-		final View send = findViewById(R.id.send);
+
 		final View attach = findViewById(R.id.attachment);
 		final View redCircle = findViewById(R.id.redCircle);
-		final EditText edit = findViewById(R.id.editmessage);
 		final Animation redCircleAnim = AnimationUtils.loadAnimation(this, R.anim.red_circle_anim);
 		// SENDING MESSAGE
 		send.setOnClickListener(view -> {
@@ -188,7 +214,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			db.addPendingOutgoingMessage(sender, address, message);
 
-			((EditText) findViewById(R.id.editmessage)).setText("");
+			edit.setText("");
 
 			sendPendingAndUpdate();
 
@@ -200,6 +226,7 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		// RECORDING AND SENDING AUDIO MESSAGE
+		micro = findViewById(R.id.micro);
 		micro.setOnTouchListener((view, motionEvent) -> {
 			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
 				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
@@ -231,6 +258,27 @@ public class ChatActivity extends AppCompatActivity {
 								edit.setVisibility(View.VISIBLE);
 								attach.setVisibility(View.VISIBLE);
 								send.setVisibility(View.VISIBLE);
+								String sender = tor.getID();
+								if (sender == null || sender.trim().equals("")) {
+									sendPendingAndUpdate();
+									return;
+								}
+								File audio = new File(pathToAudio + "/record.3gpp");
+								byte[] data = new byte[(int) audio.length()];
+								FileInputStream in = null;
+								try {
+									in = new FileInputStream(audio);
+									in.read(data);
+								} catch (FileNotFoundException e) {
+									e.printStackTrace();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+								if (in == null) return;
+								db.addPendingOutgoingAudioMessage(sender, address, data);
+								sendPendingAndUpdate();
+								recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+								rep = 0;
 							}, 1500 - System.currentTimeMillis() + pressTime);
 						}
 						break;
@@ -238,14 +286,54 @@ public class ChatActivity extends AppCompatActivity {
 			return false;
 		});
 
+		photo = findViewById(R.id.takePhoto);
+		video = findViewById(R.id.videoCapture);
+		gallery = findViewById(R.id.gallery);
+		// CHOOSING MEDIA
+		attach.setOnClickListener(view -> {
+			if (micro.getVisibility() == View.GONE) {
+				edit.setVisibility(View.VISIBLE);
+				send.setVisibility(View.VISIBLE);
+				micro.setVisibility(View.VISIBLE);
+				photo.setVisibility(View.GONE);
+				video.setVisibility(View.GONE);
+				gallery.setVisibility(View.GONE);
+			} else {
+				edit.setVisibility(View.GONE);
+				send.setVisibility(View.GONE);
+				micro.setVisibility(View.GONE);
+				photo.setVisibility(View.VISIBLE);
+				video.setVisibility(View.VISIBLE);
+				gallery.setVisibility(View.VISIBLE);
+			}
+		});
+
+		// TAKE PHOTO
+		photo.setOnClickListener(view -> {
+			Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+			startActivityForResult(takePicture, TAKE_PHOTO_SUCCESS);
+		});
+
+		// CAPTURE VIDEO
+		video.setOnClickListener(view -> {
+			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
+		});
+
+		// OPEN GALLERY
+		gallery.setOnClickListener(view -> {
+			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("image/*");
+			intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+			startActivityForResult(Intent.createChooser(intent, "Select Picture"), GALLERY_SUCCESS);
+		});
+
 		startService(new Intent(this, HostService.class));
 
-
-		@SuppressLint("CutPasteId") final EditText editmessage = findViewById(R.id.editmessage);
 		final float a = 0.5f;
 		send.setAlpha(a);
 		send.setClickable(false);
-		editmessage.addTextChangedListener(new TextWatcher() {
+		edit.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 			}
@@ -270,28 +358,66 @@ public class ChatActivity extends AppCompatActivity {
 
 	private long pressTime;
 
+	// SENDING IMAGE
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch (requestCode) {
+			case GALLERY_SUCCESS:
+				if (resultCode == RESULT_OK) {
+					if (data.getClipData() != null) {
+						int count = data.getClipData().getItemCount();
+						int currentItem = 0;
+						while (currentItem < count) {
+							Uri imageUri = data.getClipData().getItemAt(currentItem).getUri();
+							//do something with the image (save it to some directory or whatever you need to do with it here)
+							currentItem = currentItem + 1;
+						}
+					} else if (data.getData() != null) {
+						String imagePath = data.getData().getPath();
+						//do something with the image (save it to some directory or whatever you need to do with it here)
+					}
+				}
+				break;
+			case CAPTURE_SUCCESS:
+				if (resultCode == RESULT_OK) {
+					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
+				}
+				break;
+			case TAKE_PHOTO_SUCCESS:
+				if (resultCode == RESULT_OK) {
+					Toast.makeText(this, "Photo taked", Toast.LENGTH_SHORT).show();
+				}
+				break;
+		}
+		edit.setVisibility(View.VISIBLE);
+		send.setVisibility(View.VISIBLE);
+		micro.setVisibility(View.VISIBLE);
+		photo.setVisibility(View.GONE);
+		video.setVisibility(View.GONE);
+		gallery.setVisibility(View.GONE);
+	}
+
 	public void recordStart() {
 		try {
 			releaseRecorder();
-			Log.i("LOADING", "released");
-			File record = new File(media.getAbsolutePath() + "/record.3gpp");
-			Log.i("LOADING", "createdFile");
-			if (record.exists()) {
+			Log.i("AUDIO", "released");
+			File record = new File(pathToAudio + "/record.3gpp");
+			Log.i("AUDIO", "createdFile");
+			if (record.exists())
 				record.delete();
-			}
 
 			mediaRecorder = new MediaRecorder();
-			Log.i("LOADING", "new media");
+			Log.i("AUDIO", "new media");
 			mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 			mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
 			mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 			mediaRecorder.setOutputFile(record.getAbsolutePath());
-			Log.i("LOADING", "setOutput");
+			Log.i("AUDIO", "setOutput");
 			mediaRecorder.prepare();
-			Log.i("LOADING", "prepared");
+			Log.i("AUDIO", "prepared");
 			mediaRecorder.start();
-			Log.i("LOADING", "start");
-			Toast.makeText(this, "Recording", Toast.LENGTH_SHORT).show();
+			Log.i("AUDIO", "start");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -304,11 +430,11 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
-	public void playStart() {
+	public void playStart(String pathToAudio) {
 		try {
 			releasePlayer();
 			mediaPlayer = new MediaPlayer();
-			mediaPlayer.setDataSource(media.getAbsolutePath() + "/record.3gpp");
+			mediaPlayer.setDataSource(pathToAudio);
 			mediaPlayer.prepare();
 			mediaPlayer.start();
 		} catch (Exception e) {
@@ -354,7 +480,7 @@ public class ChatActivity extends AppCompatActivity {
 	protected void onResume() {
 		super.onResume();
 
-		Server.getInstance(this).setListener(() -> runOnUiThread(() -> update()));
+		Server.getInstance(this).setListener(() -> runOnUiThread(this::update));
 
 		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy()) {
@@ -439,10 +565,12 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	static class ChatHolder extends RecyclerView.ViewHolder {
-		public TextView message, time, status;
-		public View left, right;
-		public CardView card;
-		public View abort;
+		private TextView message, time, status;
+		private View left, right;
+		private CardView card;
+		private View abort;
+		private FloatingActionButton fab;
+		private ProgressBar progress;
 
 		public ChatHolder(View v) {
 			super(v);
@@ -454,6 +582,8 @@ public class ChatActivity extends AppCompatActivity {
 			right = v.findViewById(R.id.right);
 			card = v.findViewById(R.id.card);
 			abort = v.findViewById(R.id.abort);
+			fab = v.findViewById(R.id.playAudio);
+			progress = v.findViewById(R.id.audioProgress);
 		}
 	}
 
@@ -473,6 +603,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
 			String content = cursor.getString(cursor.getColumnIndex("content"));
+			byte[] audio = cursor.getBlob(cursor.getColumnIndex("audioContent"));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -523,9 +654,33 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 
 
-			holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-			holder.message.setText(Utils.linkify(ChatActivity.this, content));
-
+			if (audio.length <= 1) {
+				holder.message.setVisibility(View.VISIBLE);
+				holder.progress.setVisibility(View.GONE);
+				holder.fab.setVisibility(View.GONE);
+				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
+				holder.message.setText(Utils.linkify(ChatActivity.this, content));
+			} else {
+				holder.message.setVisibility(View.INVISIBLE);
+				holder.progress.setVisibility(View.VISIBLE);
+				holder.fab.setVisibility(View.VISIBLE);
+				File receivedAudio = new File(pathToAudio + "/received" + position + ".3gpp");
+				if (receivedAudio.exists())
+					receivedAudio.delete();
+				FileOutputStream out = null;
+				try {
+					out = new FileOutputStream(receivedAudio);
+					out.write(audio);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				if (out == null) return;
+				/*holder.fab.setOnClickListener(view -> {
+					playStart(pathToAudio + "/received" + position + ".3gpp");
+				});*/
+			}
 
 			holder.time.setText(time);
 

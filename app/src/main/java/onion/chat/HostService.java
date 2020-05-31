@@ -10,6 +10,7 @@
 
 package onion.chat;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -56,6 +57,7 @@ public class HostService extends Service {
         Log.i(TAG, s);
     }
 
+    @SuppressLint("InvalidWakeLockTag")
     @Override
     public void onCreate() {
         super.onCreate();

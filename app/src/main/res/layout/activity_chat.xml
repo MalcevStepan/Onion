@@ -148,6 +148,42 @@
 
     </LinearLayout>
         <ImageView
+            android:background="?selectableItemBackground"
+            android:src="@drawable/gallery"
+            android:layout_gravity="bottom"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:visibility="gone"
+            android:layout_marginLeft="55dp"
+            android:layout_marginBottom="13dp"
+            android:id="@+id/gallery"
+            />
+        <ImageView
+            android:background="?selectableItemBackground"
+            android:src="@drawable/camera"
+            android:layout_gravity="bottom"
+            android:visibility="gone"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="100dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/takePhoto"
+            />
+        <ImageView
+            android:background="?selectableItemBackground"
+            android:src="@drawable/video_camera"
+            android:layout_gravity="bottom"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:visibility="gone"
+            android:layout_marginLeft="150dp"
+            android:layout_marginBottom="5dp"
+            android:id="@+id/videoCapture"
+            />
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
