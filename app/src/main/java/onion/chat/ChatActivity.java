@@ -702,15 +702,12 @@ public class ChatActivity extends AppCompatActivity {
 					receivedAudio.delete();
 				FileOutputStream out = null;
 				try {
-					out = new FileOutputStream(receivedAudio);
-					out.write(audioContent.getBytes(StandardCharsets.UTF_8));
+					(out = new FileOutputStream(receivedAudio)).write(audioContent.getBytes(StandardCharsets.UTF_8));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				if (out == null) return;
-				holder.fab.setOnClickListener(view -> {
-					playStart(pathToAudio + "received" + time + ".3gpp");
-				});
+				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "received" + time + ".3gpp"));
 			} else {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
