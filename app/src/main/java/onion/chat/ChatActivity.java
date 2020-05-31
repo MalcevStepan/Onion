@@ -655,10 +655,8 @@ public class ChatActivity extends AppCompatActivity {
 			cursor.moveToPosition(position);
 
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
-			String content = cursor.getString(cursor.getColumnIndex("content"));
-			String audioContent = cursor.getString(cursor.getColumnIndex("audioContent"));
-			String videoContent = cursor.getString(cursor.getColumnIndex("videoContent"));
-			byte[] photoContent = cursor.getBlob(cursor.getColumnIndex("photoContent"));
+			String type = cursor.getString(cursor.getColumnIndex("type"));
+			byte[] content = cursor.getBlob(cursor.getColumnIndex("content"));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -707,15 +705,15 @@ public class ChatActivity extends AppCompatActivity {
 
 
 			//holder.message.setText(content);
-			if (!videoContent.equals("0")) {
-				Log.i("CONTENT", content);
+			if (type.equals("video")) {
+				Log.i("CONTENT", "video");
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
-			} else if (photoContent != null && photoContent.length > 0) {
-				Log.i("CONTENT", content);
+			} else if (type.equals("photo")) {
+				Log.i("CONTENT", "photo");
 				holder.photo.setVisibility(View.VISIBLE);
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.GONE);
@@ -724,35 +722,36 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
 				try {
 					FileOutputStream out = new FileOutputStream(receivedPhoto);
-					out.write(photoContent);
+					out.write(content);
 					out.flush();
 					out.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				holder.photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
-			} else if (!audioContent.equals("0")) {
-				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audioContent.length()));
+			} else if (type.equals("audio")) {
+				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
 				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
 				Log.i("PATH_TO_AUDIO", pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
-				FileOutputStream out = null;
 				try {
-					(out = new FileOutputStream(receivedAudio)).write(audioContent.getBytes(StandardCharsets.UTF_8));
+					FileOutputStream out = new FileOutputStream(receivedAudio);
+					out.write(content);
+					out.flush();
+					out.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				if (out == null) return;
 				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp"));
 			} else {
-				Log.i("CONTENT", content);
+				Log.i("CONTENT", "content");
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.message.setText(Utils.linkify(ChatActivity.this, content));
+				holder.message.setText(Utils.linkify(ChatActivity.this, new String(content)));
 			}
 
 			holder.time.setText(time);
