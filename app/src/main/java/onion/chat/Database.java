@@ -70,7 +70,7 @@ public class Database extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// adding new column if oldVersion is older
 		if (newVersion > oldVersion) {
-			db.execSQL("ALTER TABLE messages ADD COLUMN audioContent BLOB DEFAULT 0");
+			db.execSQL("ALTER TABLE messages ADD COLUMN audioContent BLOB");
 		}
 	}
 

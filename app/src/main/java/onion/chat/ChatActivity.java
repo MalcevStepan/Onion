@@ -81,6 +81,7 @@ public class ChatActivity extends AppCompatActivity {
 	TextView noMessages;
 	Cursor cursor;
 	Database db;
+	Date date;
 	Tor tor;
 	String address;
 	Client client;
@@ -161,6 +162,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		setContentView(R.layout.activity_chat);
 
+		date = new Date();
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
@@ -251,6 +253,27 @@ public class ChatActivity extends AppCompatActivity {
 							edit.setVisibility(View.VISIBLE);
 							attach.setVisibility(View.VISIBLE);
 							send.setVisibility(View.VISIBLE);
+							String sender = tor.getID();
+							if (sender == null || sender.trim().equals("")) {
+								sendPendingAndUpdate();
+								break;
+							}
+							File audio = new File(pathToAudio + "/record.3gpp");
+							byte[] data = new byte[(int) audio.length()];
+							FileInputStream in = null;
+							try {
+								in = new FileInputStream(audio);
+								in.read(data);
+							} catch (FileNotFoundException e) {
+								e.printStackTrace();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							if (in == null) break;
+							db.addPendingOutgoingAudioMessage(sender, address, data);
+							sendPendingAndUpdate();
+							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+							rep = 0;
 						} else {
 							final Handler handler = new Handler();
 							handler.postDelayed(() -> {
@@ -259,27 +282,6 @@ public class ChatActivity extends AppCompatActivity {
 								edit.setVisibility(View.VISIBLE);
 								attach.setVisibility(View.VISIBLE);
 								send.setVisibility(View.VISIBLE);
-								String sender = tor.getID();
-								if (sender == null || sender.trim().equals("")) {
-									sendPendingAndUpdate();
-									return;
-								}
-								File audio = new File(pathToAudio + "/record.3gpp");
-								byte[] data = new byte[(int) audio.length()];
-								FileInputStream in = null;
-								try {
-									in = new FileInputStream(audio);
-									in.read(data);
-								} catch (FileNotFoundException e) {
-									e.printStackTrace();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-								if (in == null) return;
-								db.addPendingOutgoingAudioMessage(sender, address, data);
-								sendPendingAndUpdate();
-								recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
-								rep = 0;
 							}, 1500 - System.currentTimeMillis() + pressTime);
 						}
 						break;
@@ -606,6 +608,7 @@ public class ChatActivity extends AppCompatActivity {
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
 			String content = cursor.getString(cursor.getColumnIndex("content"));
 			byte[] audio = cursor.getBlob(cursor.getColumnIndex("audioContent"));
+			Log.i("AUDIO_INDEX", String.valueOf(cursor.getColumnIndex("audioContent")));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -657,16 +660,18 @@ public class ChatActivity extends AppCompatActivity {
 
 
 			if (audio.length <= 1) {
+				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.message.setText(Utils.linkify(ChatActivity.this, content));
 			} else {
+				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audio.length));
 				holder.message.setVisibility(View.INVISIBLE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
-				File receivedAudio = new File(pathToAudio + "/received" + position + ".3gpp");
+				File receivedAudio = new File(pathToAudio + "/received" + date.getTime() + ".3gpp");
 				if (receivedAudio.exists())
 					receivedAudio.delete();
 				FileOutputStream out = null;
