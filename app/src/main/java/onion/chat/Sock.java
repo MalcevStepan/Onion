@@ -13,23 +13,20 @@ package onion.chat;
 import android.content.Context;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
 
 public class Sock {
 
 	static final int timeout = 60000;
 	Socket sock;
-	BufferedReader reader;
-	BufferedWriter writer;
+	InputStream reader;
+	OutputStream writer;
 
 	public Sock(Context context, String host, int p) {
 
@@ -42,9 +39,7 @@ public class Sock {
 			Tor tor = Tor.getInstance(context);
 
 			try {
-
 				sock.connect(new InetSocketAddress("127.0.0.1", tor.getPort()), timeout);
-
 			} catch (SocketTimeoutException ex3) {
 				log("timeout");
 				try {
@@ -100,7 +95,6 @@ public class Sock {
 
 
 			// get proxy response
-
 			{
 				InputStream is = sock.getInputStream();
 
@@ -138,8 +132,8 @@ public class Sock {
 			}
 
 
-			reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-			writer = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
+			reader = sock.getInputStream();
+			writer = sock.getOutputStream();
 
 		} catch (SocketTimeoutException ex3) {
 			log("timeout");
@@ -163,17 +157,11 @@ public class Sock {
 		Log.i("Sock", s);
 	}
 
-	public void writeLine(String... ss) {
-		String s = "";
-
-		if (ss.length > 0) s = ss[0];
-		for (int i = 1; i < ss.length; i++)
-			s += " " + ss[i];
-
-		log(" >> " + s);
+	public void writeBytes(byte[] array) {
 		if (writer != null) {
 			try {
-				writer.write(s + "\r\n");
+				writer.write(ByteBuffer.allocate(4).putInt(array.length).array());
+				writer.write(array);
 			} catch (SocketTimeoutException ex) {
 				log("timeout");
 				try {
@@ -185,45 +173,94 @@ public class Sock {
 		}
 	}
 
-	public String readLine() {
-		String s = null;
-		if (reader != null) {
-			try {
-				s = reader.readLine();
-				Log.i("READER", s);
-			} catch (SocketTimeoutException ex) {
-				log("timeout");
-				try {
-					sock.close();
-				} catch (IOException ignored) {
-				}
-			} catch (Exception ignored) {
-			}
+	public boolean writeMessage(String sender, String message) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{1});
+			else
+				return false;
+			if (writeBytes(sender, message.getBytes())) {
+				flush();
+				return true;
+			} else
+				return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
 		}
-		if (s == null)
-			s = "";
-		else
-			s = s.trim();
-		log(" << " + s);
-		return s;
 	}
 
-	public boolean readBool() {
-		return readLine().equals("1");
+	public boolean writeImage(String sender, byte[] image) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{3});
+			else
+				return false;
+			if (writeBytes(sender, image)) {
+				flush();
+				return true;
+			} else
+				return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
-	public boolean queryBool(String... request) {
-		writeLine(request);
-		flush();
-		return readBool();
+	public boolean writeAdd(String sender, String name) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{0});
+			else {
+				close();
+				return false;
+			}
+			if (writeBytes(sender, name.getBytes())) {
+				flush();
+				close();
+				return true;
+			} else {
+				close();
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			close();
+			return false;
+		}
 	}
 
-	public void queryOrClose(String... request) {
-		if (!queryBool(request)) close();
+	public boolean writeNewMsg(String sender, String time) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{2});
+			else {
+				close();
+				return false;
+			}
+			if (writeBytes(sender, time.getBytes())) {
+				flush();
+				close();
+				return true;
+			} else {
+				close();
+				return false;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			close();
+			return false;
+		}
 	}
 
-	public boolean queryAndClose(String... request) {
-		boolean x = queryBool(request);
+	public boolean writeBytes(String sender, byte[] data) {
+		writeBytes(sender.getBytes());
+		writeBytes(data);
+		return true;
+	}
+
+	public boolean queryAndClose(String sender, String time) {
+		boolean x = writeNewMsg(sender, time);
 		close();
 		return x;
 	}
@@ -236,37 +273,28 @@ public class Sock {
 				log("timeout");
 				try {
 					sock.close();
-				} catch (IOException ex2) {
+				} catch (IOException ignored) {
 				}
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 	}
 
 	public void close() {
-
 		flush();
 
-		if (sock != null) {
+		if (sock != null)
 			try {
 				sock.close();
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
-		}
 
 		reader = null;
 		writer = null;
 		sock = null;
-
 	}
 
 	public boolean isClosed() {
-		//try {
 		return sock.isClosed();
-        /*} catch(IOException ex) {
-            return true;
-        }*/
 	}
-
-
 }

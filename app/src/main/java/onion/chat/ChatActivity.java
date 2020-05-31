@@ -220,7 +220,7 @@ public class ChatActivity extends AppCompatActivity {
 			message = message.trim();
 			if (message.equals("")) return;
 
-			db.addPendingOutgoingMessage(sender, address, message, "0", "0", "0");
+			db.addPendingOutgoingMessage(sender, address, "msg", message.getBytes());
 
 			edit.setText("");
 
@@ -272,7 +272,7 @@ public class ChatActivity extends AppCompatActivity {
 								e.printStackTrace();
 							}
 							if (in == null) break;
-							db.addPendingOutgoingMessage(sender, address, "0", new String(data, StandardCharsets.UTF_8), "0", "0");
+							db.addPendingOutgoingMessage(sender, address, "audio", data);
 							sendPendingAndUpdate();
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -390,7 +390,7 @@ public class ChatActivity extends AppCompatActivity {
 								Log.i("PHOTO", "failed to convert photo");
 								break;
 							}
-							db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(baos.toByteArray(), StandardCharsets.UTF_8));
+							db.addPendingOutgoingMessage(sender, address, "photo", baos.toByteArray());
 							sendPendingAndUpdate();
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -410,7 +410,7 @@ public class ChatActivity extends AppCompatActivity {
 							Log.i("PHOTO", "failed to convert photo");
 							break;
 						}
-						db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(baos.toByteArray(), StandardCharsets.UTF_8));
+						db.addPendingOutgoingMessage(sender, address, "photo", baos.toByteArray());
 						sendPendingAndUpdate();
 						recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 						rep = 0;
@@ -432,7 +432,7 @@ public class ChatActivity extends AppCompatActivity {
 					photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 					byte[] byteArray = stream.toByteArray();
 					photo.recycle();
-					db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(byteArray, StandardCharsets.UTF_8));
+					db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
 					sendPendingAndUpdate();
 					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 					rep = 0;
@@ -658,7 +658,7 @@ public class ChatActivity extends AppCompatActivity {
 			String content = cursor.getString(cursor.getColumnIndex("content"));
 			String audioContent = cursor.getString(cursor.getColumnIndex("audioContent"));
 			String videoContent = cursor.getString(cursor.getColumnIndex("videoContent"));
-			String photoContent = cursor.getString(cursor.getColumnIndex("photoContent"));
+			byte[] photoContent = cursor.getBlob(cursor.getColumnIndex("photoContent"));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -714,7 +714,7 @@ public class ChatActivity extends AppCompatActivity {
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
-			} else if (!photoContent.equals("0")) {
+			} else if (photoContent != null && photoContent.length > 0) {
 				Log.i("CONTENT", content);
 				holder.photo.setVisibility(View.VISIBLE);
 				holder.message.setVisibility(View.GONE);
@@ -722,9 +722,11 @@ public class ChatActivity extends AppCompatActivity {
 				holder.fab.setVisibility(View.GONE);
 				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
 				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
-				FileOutputStream out = null;
 				try {
-					(out = new FileOutputStream(receivedPhoto)).write(photoContent.getBytes(StandardCharsets.UTF_8));
+					FileOutputStream out = new FileOutputStream(receivedPhoto);
+					out.write(photoContent);
+					out.flush();
+					out.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

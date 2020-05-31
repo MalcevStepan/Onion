@@ -16,15 +16,11 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class Server {
@@ -136,174 +132,80 @@ public class Server {
 			listener.onChange();
 	}
 
-	String handle(String request) throws Exception {
-
-		if (BuildConfig.DEBUG) log("accept");
-
-		Database db = Database.getInstance(context);
-		Tor tor = Tor.getInstance(context);
-		Notifier notifier = Notifier.getInstance(context);
-
-		log("request " + request);
-
-		String[] tokens = request.split(" ");
-		if (tokens.length == 0)
-			return "";
-
-		log("toks " + tokens.length);
-
-		if ("add".equals(tokens[0]) && tokens.length == 6) {
-
-			String op = tokens[0];
-			String receiver = tokens[1];
-			String sender = tokens[2];
-			String sendername = tokens[3];
-			String pubkey = tokens[4];
-			String signature = tokens[5];
-
-			if (!receiver.equals(tor.getID())) {
-				log("add wrong target");
-				return "";
-			}
-			log("add target ok");
-
-			if (!tor.checksig(
-					sender,
-					Utils.base64decode(pubkey),
-					Utils.base64decode(signature),
-					(op + " " + receiver + " " + sender + " " + sendername).getBytes())) {
-				log("add invalid signature");
-				return "";
-			}
-			log("add signature ok");
-
-			db.addContact(sender, false, true, new String(Utils.base64decode(sendername), StandardCharsets.UTF_8));
-			if (listener != null) listener.onChange();
-
-			log("add ok");
-
-			return "1";
-
-		}
-
-		if ("msg".equals(tokens[0]) && tokens.length == 11) {
-
-			String op = tokens[0];
-			String receiver = tokens[1];
-			String sender = tokens[2];
-			String sendername = tokens[3];
-			String time = tokens[4];
-			String content = tokens[5];
-			String audioContent = tokens[6];
-			String videoContent = tokens[7];
-			String photoContent = tokens[8];
-			String pubkey = tokens[9];
-			String signature = tokens[10];
-
-			if (!receiver.equals(tor.getID())) {
-				log("message wrong address");
-				return "";
-			}
-			log("message address ok");
-
-			if (!tor.checksig(
-					sender,
-					Utils.base64decode(pubkey),
-					Utils.base64decode(signature),
-					(op + " " + receiver + " " + sender + " " + sendername + " " + time + " " + content + " " + audioContent + " " + videoContent + " " + photoContent).getBytes())) {
-				log("message invalid signature");
-				return "";
-			}
-			log("message signature ok");
-
-			sendername = new String(Utils.base64decode(sendername), StandardCharsets.UTF_8);
-
-			content = new String(Utils.base64decode(content), StandardCharsets.UTF_8);
-			if (!audioContent.equals("0"))
-				audioContent = new String(Utils.base64decode(audioContent), StandardCharsets.UTF_8);
-			if (!videoContent.equals("0"))
-				videoContent = new String(Utils.base64decode(videoContent), StandardCharsets.UTF_8);
-			if (!photoContent.equals("0"))
-				photoContent = new String(Utils.base64decode(photoContent), StandardCharsets.UTF_8);
-
-			long ltime = Long.parseLong(time);
-			db.addUnreadIncomingMessage(sender, sendername, receiver, content, audioContent, videoContent, photoContent, ltime);
-
-			if (listener != null) listener.onChange();
-
-			if (db.hasContact(sender)) {
-				notifier.onMessage();
-			}
-
-			log("add ok");
-
-			return "1";
-
-		}
-
-		if ("newmsg".equals(tokens[0]) && tokens.length == 6) {
-
-			String op = tokens[0];
-			String receiver = tokens[1];
-			String sender = tokens[2];
-			String timestr = tokens[3];
-			String pubkey = tokens[4];
-			String signature = tokens[5];
-
-			if (!receiver.equals(tor.getID())) {
-				log("message wrong address");
-				return "";
-			}
-			log("message address ok");
-
-			if (Long.parseLong(timestr) > System.currentTimeMillis()) {
-				log("wrong timestamp, future");
-				return "";
-			}
-
-			if (Long.parseLong(timestr) + 150000 < System.currentTimeMillis()) {
-				log("wrong timestamp, timed out");
-				return "";
-			}
-
-			if (!tor.checksig(
-					sender,
-					Utils.base64decode(pubkey),
-					Utils.base64decode(signature),
-					(op + " " + receiver + " " + sender + " " + timestr).getBytes())) {
-				log("message invalid signature");
-				return "";
-			}
-
-			Client.getInstance(context).startSendPendingMessages(sender);
-
-			return "1";
-
-		}
-
-		return "";
-	}
-
 	private void handle(InputStream is, OutputStream os) throws Exception {
-		BufferedReader r = new BufferedReader(new InputStreamReader(is));
-		BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os));
 		while (true) {
-			String request = r.readLine();
+			byte[] info = new byte[1];
+			if (is.read(info) == 1) {
+				String senderName = null;
+				byte[] senderNameLength = new byte[4];
+				if (is.read(senderNameLength) == 4) {
+					int length = ByteBuffer.wrap(senderNameLength).getInt();
+					if (length > 0) {
+						byte[] result = new byte[length];
+						while (length > 0) {
+							int k;
+							if ((k = is.read(result, result.length - length, length)) > 0)
+								length -= k;
+							else
+								throw new Exception("Error reading");
+						}
+						senderName = new String(result);
+					}
+				}
 
-			if (request == null) break;
-			request = request.trim();
-			if (request.equals("")) break;
-			String response = "";
-			try {
-				response = handle(request);
-			} catch (Exception ex) {
-				ex.printStackTrace();
+				byte[] bLength = new byte[4];
+				if (is.read(bLength) == 4) {
+					int length = ByteBuffer.wrap(bLength).getInt();
+					if (length > 0) {
+						byte[] result = new byte[length];
+						while (length > 0) {
+							int k;
+							if ((k = is.read(result, result.length - length, length)) > 0)
+								length -= k;
+							else
+								throw new Exception("Error reading");
+						}
+
+						Database db = Database.getInstance(context);
+
+						switch (info[0]) {
+							case 0:
+								String name = new String(result).trim();
+								if (!name.equals("")) {
+									db.addContact(senderName, false, true, name);
+									if (listener != null) listener.onChange();
+								}
+								Log.e("TEST", name);
+								break;
+							case 1:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "msg", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", new String(result));
+								break;
+							case 2:
+								Client.getInstance(context).startSendPendingMessages(senderName);
+								break;
+							case 3:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", "take photo");
+								break;
+							case 4:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", "take audio");
+								break;
+						}
+					}
+				}
 			}
-			w.write(response + "\r\n");
-			w.flush();
 		}
-		r.close();
-		w.close();
 	}
 
 	private void handle(LocalSocket s) {

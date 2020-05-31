@@ -24,11 +24,9 @@ public class Database extends SQLiteOpenHelper {
 
 	private static Database instance;
 	private Context context;
-	final String DB_NAME = "cdb";
-	final int DB_VERSION = 3;
 
 	public Database(Context context) {
-		super(context, "cdb", null, 3);
+		super(context, "cdb", null, 4);
 		this.context = context;
 	}
 
@@ -64,7 +62,7 @@ public class Database extends SQLiteOpenHelper {
 		// audioContent: audio messages in binary code
 		// time: message timestamp
 		// pending: 1 if it is an outgoing message that still has to be sent, 0 if the message has already been sent, or if it has been received from someone else
-		db.execSQL("CREATE TABLE messages ( _id INTEGER PRIMARY KEY, sender TEXT, receiver TEXT, content TEXT, audioContent TEXT, videoContent TEXT, photoContent TEXT, time INTEGER, pending INTEGER, UNIQUE(sender, receiver, time) )");
+		db.execSQL("CREATE TABLE messages ( _id INTEGER PRIMARY KEY, sender TEXT, receiver TEXT, type TEXT, content BLOB, time INTEGER, pending INTEGER, UNIQUE(sender, receiver, time) )");
 
 
 	}
@@ -72,27 +70,25 @@ public class Database extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// adding new column if oldVersion is older
-		if (newVersion > oldVersion) {
+		/*if (newVersion > oldVersion) {
 			db.execSQL("ALTER TABLE messages ADD COLUMN audioContent TEXT");
 			db.execSQL("ALTER TABLE messages ADD COLUMN videoContent TEXT");
 			db.execSQL("ALTER TABLE messages ADD COLUMN photoContent TEXT");
-		}
+		}*/
 	}
 
 
 	// messages
 
-	public synchronized long addUnreadIncomingMessage(String sender, String sendername, String receiver, String content, String encodedAudio, String encodedVideo, String encodedPhoto, long time) {
+	public synchronized long addUnreadIncomingMessage(String sender, String sendername, String receiver, String type, byte[] content, long time) {
 		addContact(sender, false, true, sendername);
 		long n;
 		{
 			ContentValues v = new ContentValues();
 			v.put("sender", sender);
 			v.put("receiver", receiver);
+			v.put("type", type);
 			v.put("content", content);
-			v.put("audioContent", encodedAudio);
-			v.put("videoContent", encodedVideo);
-			v.put("photoContent", encodedPhoto);
 			v.put("time", time);
 			n = getWritableDatabase().insert("messages", null, v);
 		}
@@ -102,14 +98,12 @@ public class Database extends SQLiteOpenHelper {
 		return n;
 	}
 
-	public synchronized long addPendingOutgoingMessage(String sender, String receiver, String message, String encodedAudio, String encodedVideo, String encodedPhoto) {
+	public synchronized long addPendingOutgoingMessage(String sender, String receiver, String type, byte[] content) {
 		ContentValues v = new ContentValues();
 		v.put("sender", sender);
 		v.put("receiver", receiver);
-		v.put("content", message);
-		v.put("audioContent", encodedAudio);
-		v.put("videoContent", encodedVideo);
-		v.put("photoContent", encodedPhoto);
+		v.put("type", type);
+		v.put("content", content);
 		v.put("time", System.currentTimeMillis());
 		v.put("pending", true);
 		return getReadableDatabase().insert("messages", null, v);

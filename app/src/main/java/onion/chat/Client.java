@@ -14,7 +14,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -51,56 +50,29 @@ public class Client {
 	}
 
 	private boolean sendAdd(String receiver) {
-
-		String sender = tor.getID();
-
-		String n = db.getName();
-		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(StandardCharsets.UTF_8));
-
-		return connect(receiver).queryAndClose(
-				"add",
-				receiver,
-				sender,
-				n,
-				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(("add " + receiver + " " + sender + " " + n).getBytes()))
-		);
-
+		return connect(receiver).writeAdd(tor.getID(), db.getName());
 	}
 
-	private boolean sendMsg(Sock sock, String receiver, String time, String content, String encodedAudio, String encodedVideo, String encodedPhoto) {
-
+	private boolean sendMsg(Sock sock, String receiver, String content) {
 		if (sock.isClosed()) {
 			return false;
 		}
-			content = Utils.base64encode(content.getBytes(StandardCharsets.UTF_8));
-		if (!encodedAudio.equals("0"))
-			encodedAudio = Utils.base64encode(encodedAudio.getBytes(StandardCharsets.UTF_8));
-		if (!encodedVideo.equals("0"))
-			encodedVideo = Utils.base64encode(encodedVideo.getBytes(StandardCharsets.UTF_8));
-		if (!encodedPhoto.equals("0"))
-			encodedPhoto = Utils.base64encode(encodedPhoto.getBytes(StandardCharsets.UTF_8));
+
 		String sender = tor.getID();
 		if (receiver.equals(sender)) return false;
 
-		String n = db.getName();
-		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(StandardCharsets.UTF_8));
+		return sock.writeMessage(sender, content);
+	}
 
-		return sock.queryBool(
-				"msg",
-				receiver,
-				sender,
-				n,
-				time,
-				content,
-				encodedAudio,
-				encodedVideo,
-				encodedPhoto,
-				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(("msg " + receiver + " " + sender + " " + n + " " + time + " " + content + " " + encodedAudio + " " + encodedVideo + " " + encodedPhoto).getBytes()))
-		);
+	private boolean sendImage(Sock sock, String receiver, byte[] photo) {
+		if (sock.isClosed()) {
+			return false;
+		}
+
+		String sender = tor.getID();
+		if (receiver.equals(sender)) return false;
+
+		return sock.writeImage(sender, photo);
 
 	}
 
@@ -146,14 +118,18 @@ public class Client {
 			while (cur.moveToNext()) {
 				log("try to send message");
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
-				String time = cur.getString(cur.getColumnIndex("time"));
-				String content = cur.getString(cur.getColumnIndex("content"));
-				String videoContent = cur.getString(cur.getColumnIndex("videoContent"));
-				String photoContent = cur.getString(cur.getColumnIndex("photoContent"));
-				String audioContent = cur.getString(cur.getColumnIndex("audioContent"));
-				if (sendMsg(sock, receiver, time, content, audioContent, videoContent, photoContent)) {
-					db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-					log("message sent");
+				String type = cur.getString(cur.getColumnIndex("type"));
+				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
+				if (type.equals("msg")) {
+					if (sendMsg(sock, receiver, new String(content))) {
+						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						log("message sent");
+					}
+				} else if (type.equals("photo")) {
+					if (sendImage(sock, receiver, content)) {
+						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						log("message photo sent");
+					}
 				}
 			}
 			sock.close();
@@ -210,14 +186,8 @@ public class Client {
 	}
 
 	public void doAskForNewMessages(String receiver) {
-		String sender = tor.getID();
 		log("ask for new msg");
-		String cmd = "newmsg " + receiver + " " + sender + " " + System.currentTimeMillis() / 60000 * 60000;
-		connect(receiver).queryAndClose(
-				cmd,
-				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(cmd.getBytes()))
-		);
+		connect(receiver).queryAndClose(tor.getID(), String.valueOf(System.currentTimeMillis() / 60000 * 60000));
 	}
 
 	public void startAskForNewMessages(final String receiver) {
@@ -232,6 +202,4 @@ public class Client {
 		}
 		cur.close();
 	}
-
-
 }
