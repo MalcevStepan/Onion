@@ -141,8 +141,9 @@ public class ChatActivity extends AppCompatActivity {
 		noMessages.setVisibility(cursor.getCount() > 0 ? View.GONE : View.VISIBLE);
 	}
 
-	void sendPendingAndUpdate() {
+	void sendPendingAndUpdate(String log) {
 		//if(!client.isBusy()) {
+		log(log);
 		client.startSendPendingMessages(address);
 		//}
 		update();
@@ -212,7 +213,7 @@ public class ChatActivity extends AppCompatActivity {
 		// SENDING MESSAGE
 		sendIcon.setOnClickListener(view -> {
 			if (sender == null || sender.trim().equals("")) {
-				sendPendingAndUpdate();
+				sendPendingAndUpdate("sendIcon");
 				return;
 			}
 
@@ -224,7 +225,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			edit.setText("");
 
-			sendPendingAndUpdate();
+			sendPendingAndUpdate("sendIcon");
 
 			//recycler.scrollToPosition(cursor.getCount() - 1);
 
@@ -259,7 +260,7 @@ public class ChatActivity extends AppCompatActivity {
 							attach.setVisibility(View.VISIBLE);
 							sendIcon.setVisibility(View.VISIBLE);
 							if (sender == null || sender.trim().equals("")) {
-								sendPendingAndUpdate();
+								sendPendingAndUpdate("audio 1");
 								break;
 							}
 							File audio = new File(pathToAudio + "/record.3gpp");
@@ -273,7 +274,7 @@ public class ChatActivity extends AppCompatActivity {
 							}
 							if (in == null) break;
 							db.addPendingOutgoingMessage(sender, address, "audio", data);
-							sendPendingAndUpdate();
+							sendPendingAndUpdate("audio 2");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
 						} else {
@@ -391,7 +392,7 @@ public class ChatActivity extends AppCompatActivity {
 								break;
 							}
 							db.addPendingOutgoingMessage(sender, address, "photo", baos.toByteArray());
-							sendPendingAndUpdate();
+							sendPendingAndUpdate("gallerey");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
 							currentItem = currentItem + 1;
@@ -411,7 +412,7 @@ public class ChatActivity extends AppCompatActivity {
 							break;
 						}
 						db.addPendingOutgoingMessage(sender, address, "photo", baos.toByteArray());
-						sendPendingAndUpdate();
+						sendPendingAndUpdate("photo");
 						recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 						rep = 0;
 					}
@@ -433,7 +434,7 @@ public class ChatActivity extends AppCompatActivity {
 					byte[] byteArray = stream.toByteArray();
 					photo.recycle();
 					db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
-					sendPendingAndUpdate();
+					sendPendingAndUpdate("camera");
 					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 					rep = 0;
 				}
@@ -533,7 +534,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy())
-				sendPendingAndUpdate();
+				sendPendingAndUpdate("resume");
 		}));
 
 		client.setStatusListener(loading -> runOnUiThread(() -> {
@@ -547,7 +548,7 @@ public class ChatActivity extends AppCompatActivity {
 			if (!loading) update();
 		}));
 
-		sendPendingAndUpdate();
+		//sendPendingAndUpdate();
 
 
 		timer = new Timer();

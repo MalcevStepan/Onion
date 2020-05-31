@@ -113,6 +113,7 @@ public class Client {
 		log("do send pending messages");
 		Database db = Database.getInstance(context);
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
+		log(String.valueOf(cur.getCount()));
 		if (cur.getCount() > 0) {
 			Sock sock = connect(address);
 			while (cur.moveToNext()) {
