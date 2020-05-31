@@ -26,3 +26,5 @@ proguard/
 *.iws
 .idea/
 local.properties
+build/
+build
