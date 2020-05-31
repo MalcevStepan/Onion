@@ -7,11 +7,12 @@ android {
 
     defaultConfig {
         applicationId "onion.chat"
-        minSdkVersion 16
+        minSdkVersion 20
         targetSdkVersion 29
         versionCode 9
         versionName "9"
 
+        multiDexEnabled true
         externalNativeBuild {
             cmake {
                 cppFlags "-fexceptions -s"
@@ -32,6 +33,7 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -39,6 +41,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
     //compile files('libs/bcpkix-jdk12-153.jar')
     //compile files('jce-jdk12-153.jar')
     implementation files('libs/core-1.52.0.0.jar')

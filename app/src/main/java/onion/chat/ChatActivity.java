@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -590,12 +591,13 @@ public class ChatActivity extends AppCompatActivity {
 	class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
 
 		@Override
-		public ChatHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+		@NonNull
+		public ChatHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 			return new ChatHolder(getLayoutInflater().inflate(R.layout.item_message, parent, false));
 		}
 
 		@Override
-		public void onBindViewHolder(ChatHolder holder, int position) {
+		public void onBindViewHolder(@NonNull ChatHolder holder, int position) {
 			if (cursor == null) return;
 
 			cursor.moveToFirst();
