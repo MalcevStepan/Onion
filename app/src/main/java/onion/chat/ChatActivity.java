@@ -613,18 +613,13 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	static class ChatHolder extends RecyclerView.ViewHolder {
-		private TextView message, time, status;
+		private TextView time, status;
 		private View left, right;
 		private CardView card;
 		private View abort;
-		private FloatingActionButton fab;
-		private ProgressBar progress;
-		private VideoView video;
-		private ImageView photo;
 
 		public ChatHolder(View v) {
 			super(v);
-			message = v.findViewById(R.id.message);
 			//sender = (TextView)v.findViewById(R.id.sender);
 			time = v.findViewById(R.id.time);
 			status = v.findViewById(R.id.status);
@@ -632,30 +627,82 @@ public class ChatActivity extends AppCompatActivity {
 			right = v.findViewById(R.id.right);
 			card = v.findViewById(R.id.card);
 			abort = v.findViewById(R.id.abort);
+		}
+	}
+
+	static class MessageHolder extends ChatHolder {
+		private TextView message;
+
+		public MessageHolder(View v) {
+			super(v);
+			message = v.findViewById(R.id.message);
+		}
+	}
+
+	static class AudioHolder extends ChatHolder {
+		private FloatingActionButton fab;
+		private ProgressBar progress;
+
+		public AudioHolder(View v) {
+			super(v);
 			fab = v.findViewById(R.id.playAudio);
 			progress = v.findViewById(R.id.audioProgress);
-			photo = v.findViewById(R.id.photoView);
+		}
+	}
+
+	static class VideoHolder extends ChatHolder {
+		private VideoView video;
+
+		public VideoHolder(View v) {
+			super(v);
 			video = v.findViewById(R.id.videoView);
 		}
 	}
 
-	class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
+	static class PhotoHolder extends ChatHolder {
+		private ImageView photo;
+
+		public PhotoHolder(View v) {
+			super(v);
+			photo = v.findViewById(R.id.photoView);
+		}
+	}
+
+	class ChatAdapter extends RecyclerView.Adapter {
 
 		@Override
-		@NonNull
-		public ChatHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-			return new ChatHolder(getLayoutInflater().inflate(R.layout.item_message, parent, false));
+		public int getItemViewType(int position) {
+			cursor.moveToFirst();
+			cursor.moveToPosition(position);
+			String type = cursor.getString(cursor.getColumnIndex("type"));
+			return MessageType.getEnum(type).value;
 		}
 
 		@Override
-		public void onBindViewHolder(@NonNull ChatHolder holder, int position) {
+		@NonNull
+		public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			switch (MessageType.values()[viewType - 1]) {
+				case TEXT:
+					return new MessageHolder(getLayoutInflater().inflate(R.layout.item_message, parent, false));
+				case AUDIO:
+					return new AudioHolder(getLayoutInflater().inflate(R.layout.item_audio, parent, false));
+				case VIDEO:
+					return new VideoHolder(getLayoutInflater().inflate(R.layout.item_video, parent, false));
+				case PHOTO:
+					return new PhotoHolder(getLayoutInflater().inflate(R.layout.item_photo, parent, false));
+				default:
+					return null;
+			}
+		}
+
+		@Override
+		public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 			if (cursor == null) return;
 
 			cursor.moveToFirst();
 			cursor.moveToPosition(position);
 
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
-			String type = cursor.getString(cursor.getColumnIndex("type"));
 			byte[] content = cursor.getBlob(cursor.getColumnIndex("content"));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
@@ -666,18 +713,18 @@ public class ChatActivity extends AppCompatActivity {
 			if (sender.equals(tor.getID())) sender = "You";
 
 			if (tx) {
-				holder.left.setVisibility(View.VISIBLE);
-				holder.right.setVisibility(View.GONE);
+				((ChatHolder) holder).left.setVisibility(View.VISIBLE);
+				((ChatHolder) holder).right.setVisibility(View.GONE);
 			} else {
-				holder.left.setVisibility(View.GONE);
-				holder.right.setVisibility(View.VISIBLE);
+				((ChatHolder) holder).left.setVisibility(View.GONE);
+				((ChatHolder) holder).right.setVisibility(View.VISIBLE);
 			}
 
 			if (pending)
 				//holder.card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics()));
-				holder.card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
+				((ChatHolder) holder).card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics()));
 			else
-				holder.card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, getResources().getDisplayMetrics()));
+				((ChatHolder) holder).card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, getResources().getDisplayMetrics()));
 
 
 			String status = "";
@@ -700,24 +747,16 @@ public class ChatActivity extends AppCompatActivity {
 
 
 			int color = pending ? 0xff000000 : 0xff888888;
-			holder.time.setTextColor(color);
-			holder.status.setTextColor(color);
+			((ChatHolder) holder).time.setTextColor(color);
+			((ChatHolder) holder).status.setTextColor(color);
 
 
 			//holder.message.setText(content);
-			if (type.equals("video")) {
+			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-				holder.message.setVisibility(View.VISIBLE);
-				holder.progress.setVisibility(View.GONE);
-				holder.fab.setVisibility(View.GONE);
-				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
-			} else if (type.equals("photo")) {
+
+			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				holder.photo.setVisibility(View.VISIBLE);
-				holder.message.setVisibility(View.GONE);
-				holder.progress.setVisibility(View.GONE);
-				holder.fab.setVisibility(View.GONE);
 				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
 				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
 				try {
@@ -728,12 +767,9 @@ public class ChatActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				holder.photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
-			} else if (type.equals("audio")) {
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
+			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				holder.message.setVisibility(View.GONE);
-				holder.progress.setVisibility(View.VISIBLE);
-				holder.fab.setVisibility(View.VISIBLE);
 				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
 				Log.i("PATH_TO_AUDIO", pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
 				try {
@@ -744,34 +780,29 @@ public class ChatActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp"));
+				((AudioHolder) holder).fab.setOnClickListener(view -> playStart(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp"));
 			} else {
 				Log.i("CONTENT", "content");
-				holder.message.setVisibility(View.VISIBLE);
-				holder.progress.setVisibility(View.GONE);
-				holder.fab.setVisibility(View.GONE);
-				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.message.setText(Utils.linkify(ChatActivity.this, new String(content)));
+				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
+				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
 			}
 
-			holder.time.setText(time);
-
-
-			holder.status.setText(status);
+			((ChatHolder) holder).time.setText(time);
+			((ChatHolder) holder).status.setText(status);
 
 
 			if (pending) {
-				holder.abort.setVisibility(View.VISIBLE);
-				holder.abort.setClickable(true);
-				holder.abort.setOnClickListener(v -> {
+				((ChatHolder) holder).abort.setVisibility(View.VISIBLE);
+				((ChatHolder) holder).abort.setClickable(true);
+				((ChatHolder) holder).abort.setOnClickListener(v -> {
 					boolean ok = db.abortOutgoingMessage(id);
 					update();
 					Toast.makeText(ChatActivity.this, ok ? "Pending message aborted." : "Error: Message already sent.", Toast.LENGTH_SHORT).show();
 				});
 			} else {
-				holder.abort.setVisibility(View.GONE);
-				holder.abort.setClickable(false);
-				holder.abort.setOnClickListener(null);
+				((ChatHolder) holder).abort.setVisibility(View.GONE);
+				((ChatHolder) holder).abort.setClickable(false);
+				((ChatHolder) holder).abort.setOnClickListener(null);
 			}
 		}
 
