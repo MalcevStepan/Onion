@@ -218,13 +218,12 @@ public class Server {
 
 			sendername = new String(Utils.base64decode(sendername), StandardCharsets.UTF_8);
 
-			if (content != null)
-				content = new String(Utils.base64decode(content), StandardCharsets.UTF_8);
-			if (audioContent != null)
+			content = new String(Utils.base64decode(content), StandardCharsets.UTF_8);
+			if (!audioContent.equals("0"))
 				audioContent = new String(Utils.base64decode(audioContent), StandardCharsets.UTF_8);
-			if (videoContent != null)
+			if (!videoContent.equals("0"))
 				videoContent = new String(Utils.base64decode(videoContent), StandardCharsets.UTF_8);
-			if (photoContent != null)
+			if (!photoContent.equals("0"))
 				photoContent = new String(Utils.base64decode(photoContent), StandardCharsets.UTF_8);
 
 			long ltime = Long.parseLong(time);

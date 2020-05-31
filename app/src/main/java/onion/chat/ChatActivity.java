@@ -51,6 +51,7 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -88,6 +89,7 @@ public class ChatActivity extends AppCompatActivity {
 	Client client;
 
 	String myname = "", othername = "";
+	String sender;
 
 	long idMsgLastLast = -1;
 
@@ -171,6 +173,7 @@ public class ChatActivity extends AppCompatActivity {
 		new File(pathToAudio).mkdirs();
 		new File(pathToPhotoAndVideo).mkdir();
 
+		sender = tor.getID();
 		send = findViewById(R.id.send);
 		edit = findViewById(R.id.editmessage);
 		noMessages = findViewById(R.id.noMessages);
@@ -205,7 +208,6 @@ public class ChatActivity extends AppCompatActivity {
 		final Animation redCircleAnim = AnimationUtils.loadAnimation(this, R.anim.red_circle_anim);
 		// SENDING MESSAGE
 		send.setOnClickListener(view -> {
-			String sender = tor.getID();
 			if (sender == null || sender.trim().equals("")) {
 				sendPendingAndUpdate();
 				return;
@@ -215,7 +217,7 @@ public class ChatActivity extends AppCompatActivity {
 			message = message.trim();
 			if (message.equals("")) return;
 
-			db.addPendingOutgoingMessage(sender, address, message, null, null, null);
+			db.addPendingOutgoingMessage(sender, address, message, "0", "0", "0");
 
 			edit.setText("");
 
@@ -253,7 +255,6 @@ public class ChatActivity extends AppCompatActivity {
 							edit.setVisibility(View.VISIBLE);
 							attach.setVisibility(View.VISIBLE);
 							send.setVisibility(View.VISIBLE);
-							String sender = tor.getID();
 							if (sender == null || sender.trim().equals("")) {
 								sendPendingAndUpdate();
 								break;
@@ -268,7 +269,7 @@ public class ChatActivity extends AppCompatActivity {
 								e.printStackTrace();
 							}
 							if (in == null) break;
-							db.addPendingOutgoingMessage(sender, address, null, new String(data, StandardCharsets.UTF_8), null, null);
+							db.addPendingOutgoingMessage(sender, address, "0", new String(data, StandardCharsets.UTF_8), "0", "0");
 							sendPendingAndUpdate();
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -371,12 +372,30 @@ public class ChatActivity extends AppCompatActivity {
 						int currentItem = 0;
 						while (currentItem < count) {
 							Uri imageUri = data.getClipData().getItemAt(currentItem).getUri();
-							//do something with the image (save it to some directory or whatever you need to do with it here)
+							ByteArrayOutputStream baos = new ByteArrayOutputStream();
+							FileInputStream fis = null;
+							try {
+								fis = new FileInputStream(new File(String.valueOf(imageUri)));
+								byte[] buf = new byte[1024];
+								int n;
+								while (-1 != (n = fis.read(buf)))
+									baos.write(buf, 0, n);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							if (fis == null) {
+								Log.i("PHOTO", "failed to convert photo");
+								break;
+							}
+							db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(baos.toByteArray(), StandardCharsets.UTF_8));
+							sendPendingAndUpdate();
+							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+							rep = 0;
 							currentItem = currentItem + 1;
 						}
 					} else if (data.getData() != null) {
 						String imagePath = data.getData().getPath();
-						//do something with the image (save it to some directory or whatever you need to do with it here)
+
 					}
 				}
 				break;
@@ -658,21 +677,21 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 
 
-			if (videoContent != null) {
+			if (!videoContent.equals("0")) {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
-			} else if (photoContent != null) {
+			} else if (!photoContent.equals("0")) {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
 				holder.message.setText(Utils.linkify(ChatActivity.this, "PHOTO"));
-			} else if (audioContent != null) {
+			} else if (!audioContent.equals("0")) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audioContent.length()));
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);

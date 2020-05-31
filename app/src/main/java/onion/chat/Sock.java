@@ -185,26 +185,6 @@ public class Sock {
 		}
 	}
 
-	public void writeAudio(byte[] audio) {
-		log("write audio");
-		if (writer != null) {
-			char[] content = new char[audio.length + 1];
-			int i;
-			for (i = 0; i < audio.length; i++) content[i] = (char) audio[i];
-			content[i] = '\n';
-			try {
-				writer.write(content);
-				log("success write");
-			} catch (IOException io) {
-				log("timeout");
-				try {
-					sock.close();
-				} catch (IOException ignored) {
-				}
-			}
-		}
-	}
-
 	public String readLine() {
 		String s = null;
 		if (reader != null) {
@@ -215,9 +195,9 @@ public class Sock {
 				log("timeout");
 				try {
 					sock.close();
-				} catch (IOException ex2) {
+				} catch (IOException ignored) {
 				}
-			} catch (Exception ex) {
+			} catch (Exception ignored) {
 			}
 		}
 		if (s == null)

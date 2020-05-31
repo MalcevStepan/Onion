@@ -74,14 +74,12 @@ public class Client {
 		if (sock.isClosed()) {
 			return false;
 		}
-
-		if (content != null)
 			content = Utils.base64encode(content.getBytes(StandardCharsets.UTF_8));
-		if (encodedAudio != null)
+		if (!encodedAudio.equals("0"))
 			encodedAudio = Utils.base64encode(encodedAudio.getBytes(StandardCharsets.UTF_8));
-		if (encodedVideo != null)
+		if (!encodedVideo.equals("0"))
 			encodedVideo = Utils.base64encode(encodedVideo.getBytes(StandardCharsets.UTF_8));
-		if (encodedPhoto != null)
+		if (!encodedPhoto.equals("0"))
 			encodedPhoto = Utils.base64encode(encodedPhoto.getBytes(StandardCharsets.UTF_8));
 		String sender = tor.getID();
 		if (receiver.equals(sender)) return false;
