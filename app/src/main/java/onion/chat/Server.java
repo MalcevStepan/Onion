@@ -132,7 +132,7 @@ public class Server {
 			listener.onChange();
 	}
 
-	private void handle(InputStream is) throws Exception {
+	private void handle(InputStream is, OutputStream os) throws Exception {
 		while (true) {
 			byte[] info = new byte[1];
 			if (is.read(info) == 1) {
@@ -168,19 +168,39 @@ public class Server {
 
 						Database db = Database.getInstance(context);
 
-						if (info[0] == 0) {
-							String name = new String(result).trim();
-							if (!name.equals("")) {
-								db.addContact(senderName, false, true, name);
+						switch (info[0]) {
+							case 0:
+								String name = new String(result).trim();
+								if (!name.equals("")) {
+									db.addContact(senderName, false, true, name);
+									if (listener != null) listener.onChange();
+								}
+								Log.e("TEST", name);
+								break;
+							case 1:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "msg", result, System.currentTimeMillis());
 								if (listener != null) listener.onChange();
-							}
-							Log.e("TEST", name);
-						} else {
-							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), MessageType.values()[info[0]].type, result, System.currentTimeMillis());
-							if (listener != null) listener.onChange();
-							if (db.hasContact(senderName))
-								Notifier.getInstance(context).onMessage();
-							Log.e("TEST", MessageType.values()[info[0]].type);
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", new String(result));
+								break;
+							case 2:
+								Client.getInstance(context).startSendPendingMessages(senderName);
+								break;
+							case 3:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", "take photo");
+								break;
+							case 4:
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", "take audio");
+								break;
 						}
 					}
 				}
@@ -193,15 +213,15 @@ public class Server {
 		OutputStream os = null;
 		try {
 			is = s.getInputStream();
-		} catch (IOException ignored) {
+		} catch (IOException ex) {
 		}
 		try {
 			os = s.getOutputStream();
-		} catch (IOException ignored) {
+		} catch (IOException ex) {
 		}
 		if (is != null && os != null) {
 			try {
-				handle(is);
+				handle(is, os);
 			} catch (Throwable ex) {
 				ex.printStackTrace();
 			}
