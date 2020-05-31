@@ -56,6 +56,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -213,7 +215,7 @@ public class ChatActivity extends AppCompatActivity {
 			message = message.trim();
 			if (message.equals("")) return;
 
-			db.addPendingOutgoingMessage(sender, address, message);
+			db.addPendingOutgoingMessage(sender, address, message, null, null, null);
 
 			edit.setText("");
 
@@ -262,13 +264,11 @@ public class ChatActivity extends AppCompatActivity {
 							try {
 								in = new FileInputStream(audio);
 								in.read(data);
-							} catch (FileNotFoundException e) {
-								e.printStackTrace();
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
 							if (in == null) break;
-							db.addPendingOutgoingAudioMessage(sender, address, data);
+							db.addPendingOutgoingMessage(sender, address, null, new String(data, StandardCharsets.UTF_8), null, null);
 							sendPendingAndUpdate();
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -383,6 +383,7 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
+
 				}
 				break;
 			case TAKE_PHOTO_SUCCESS:
@@ -437,7 +438,7 @@ public class ChatActivity extends AppCompatActivity {
 			mediaPlayer = new MediaPlayer();
 			mediaPlayer.setDataSource(pathToAudio);
 			mediaPlayer.prepare();
-			mediaPlayer.start();
+			mediaPlayer.setOnPreparedListener(mp -> mediaPlayer.start());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -484,9 +485,8 @@ public class ChatActivity extends AppCompatActivity {
 		Server.getInstance(this).setListener(() -> runOnUiThread(this::update));
 
 		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
-			if (!client.isBusy()) {
+			if (!client.isBusy())
 				sendPendingAndUpdate();
-			}
 		}));
 
 		client.setStatusListener(loading -> runOnUiThread(() -> {
@@ -605,7 +605,9 @@ public class ChatActivity extends AppCompatActivity {
 
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
 			String content = cursor.getString(cursor.getColumnIndex("content"));
-			byte[] audio = cursor.getBlob(cursor.getColumnIndex("audioContent"));
+			String audioContent = cursor.getString(cursor.getColumnIndex("audioContent"));
+			String videoContent = cursor.getString(cursor.getColumnIndex("videoContent"));
+			String photoContent = cursor.getString(cursor.getColumnIndex("photoContent"));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -656,15 +658,22 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 
 
-			if (audio.length <= 1) {
+			if (videoContent != null) {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
 				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.message.setText(Utils.linkify(ChatActivity.this, content));
-			} else {
-				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audio.length));
+				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
+			} else if (photoContent != null) {
+				Log.i("CONTENT", content);
+				holder.message.setVisibility(View.VISIBLE);
+				holder.progress.setVisibility(View.GONE);
+				holder.fab.setVisibility(View.GONE);
+				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
+				holder.message.setText(Utils.linkify(ChatActivity.this, "PHOTO"));
+			} else if (audioContent != null) {
+				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audioContent.length()));
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
@@ -674,14 +683,19 @@ public class ChatActivity extends AppCompatActivity {
 					receivedAudio.delete();
 				FileOutputStream out = null;
 				try {
-					(out = new FileOutputStream(receivedAudio)).write(audio);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
+					(out = new FileOutputStream(receivedAudio)).write(audioContent.getBytes(StandardCharsets.UTF_8));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				if (out == null) return;
 				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "received" + time + ".3gpp"));
+			} else {
+				Log.i("CONTENT", content);
+				holder.message.setVisibility(View.VISIBLE);
+				holder.progress.setVisibility(View.GONE);
+				holder.fab.setVisibility(View.GONE);
+				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
+				holder.message.setText(Utils.linkify(ChatActivity.this, content));
 			}
 
 			holder.time.setText(time);

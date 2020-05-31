@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.util.Log;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
@@ -46,8 +47,7 @@ public class Client {
 
 	private Sock connect(String address) {
 		log("connect to " + address);
-		Sock sock = new Sock(context, address + ".onion", Tor.getHiddenServicePort());
-		return sock;
+		return new Sock(context, address + ".onion", Tor.getHiddenServicePort());
 	}
 
 	private boolean sendAdd(String receiver) {
@@ -56,7 +56,7 @@ public class Client {
 
 		String n = db.getName();
 		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(Charset.forName("UTF-8")));
+		n = Utils.base64encode(n.getBytes(StandardCharsets.UTF_8));
 
 		return connect(receiver).queryAndClose(
 				"add",
@@ -69,19 +69,26 @@ public class Client {
 
 	}
 
-	private boolean sendMsg(Sock sock, String receiver, String time, String content) {
+	private boolean sendMsg(Sock sock, String receiver, String time, String content, String encodedAudio, String encodedVideo, String encodedPhoto) {
 
 		if (sock.isClosed()) {
 			return false;
 		}
 
-		content = Utils.base64encode(content.getBytes(Charset.forName("UTF-8")));
+		if (content != null)
+			content = Utils.base64encode(content.getBytes(StandardCharsets.UTF_8));
+		if (encodedAudio != null)
+			encodedAudio = Utils.base64encode(encodedAudio.getBytes(StandardCharsets.UTF_8));
+		if (encodedVideo != null)
+			encodedVideo = Utils.base64encode(encodedVideo.getBytes(StandardCharsets.UTF_8));
+		if (encodedPhoto != null)
+			encodedPhoto = Utils.base64encode(encodedPhoto.getBytes(StandardCharsets.UTF_8));
 		String sender = tor.getID();
 		if (receiver.equals(sender)) return false;
 
 		String n = db.getName();
 		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(Charset.forName("UTF-8")));
+		n = Utils.base64encode(n.getBytes(StandardCharsets.UTF_8));
 
 		return sock.queryBool(
 				"msg",
@@ -90,33 +97,13 @@ public class Client {
 				n,
 				time,
 				content,
+				encodedAudio,
+				encodedVideo,
+				encodedPhoto,
 				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(("msg " + receiver + " " + sender + " " + n + " " + time + " " + content).getBytes()))
+				Utils.base64encode(tor.sign(("msg " + receiver + " " + sender + " " + n + " " + time + " " + content + " " + encodedAudio + " " + encodedVideo + " " + encodedPhoto).getBytes()))
 		);
 
-	}
-
-	private boolean sendAudioMsg(Sock sock, String receiver, String time, byte[] content) {
-		if (sock.isClosed()) {
-			return false;
-		}
-		String sender = tor.getID();
-		if (receiver.equals(sender)) return false;
-
-		String n = db.getName();
-		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(Charset.forName("UTF-8")));
-
-		return sock.queryBoolAudio(
-				content,
-				"msg",
-				receiver,
-				sender,
-				n,
-				time,
-				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(("msg " + receiver + " " + sender + " " + n + " " + time + " ").getBytes()))
-		);
 	}
 
 	public void startSendPendingFriends() {
@@ -163,7 +150,10 @@ public class Client {
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String time = cur.getString(cur.getColumnIndex("time"));
 				String content = cur.getString(cur.getColumnIndex("content"));
-				if (sendMsg(sock, receiver, time, content)) {
+				String videoContent = cur.getString(cur.getColumnIndex("videoContent"));
+				String photoContent = cur.getString(cur.getColumnIndex("photoContent"));
+				String audioContent = cur.getString(cur.getColumnIndex("audioContent"));
+				if (sendMsg(sock, receiver, time, content, audioContent, videoContent, photoContent)) {
 					db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 					log("message sent");
 				}
@@ -173,31 +163,9 @@ public class Client {
 		cur.close();
 	}
 
-	private void doSendPendingAudioMessages(String address) {
-		log("do send pending audio messages");
-		Database db = Database.getInstance(context);
-		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
-		if (cur.getCount() > 0) {
-			Sock sock = connect(address);
-			while (cur.moveToNext()) {
-				log("try to send audio message");
-				String receiver = cur.getString(cur.getColumnIndex("receiver"));
-				String time = cur.getString(cur.getColumnIndex("time"));
-				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
-				if (sendAudioMsg(sock, receiver, time, content)) {
-					db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-					log("audio sent");
-				}
-			}
-			sock.close();
-		}
-		cur.close();
-	}
-
-	public void startSendPendingMessages(final String address) {
+	public synchronized void startSendPendingMessages(final String address) {
 		log("start send pending messages");
 		start(() -> doSendPendingMessages(address));
-		start(() -> doSendPendingAudioMessages(address));
 	}
 
 	boolean isBusy() {
@@ -238,7 +206,7 @@ public class Client {
 
 	public boolean testIfServerIsUp() {
 		Sock sock = connect(tor.getID());
-		boolean ret = sock.isClosed() == false;
+		boolean ret = !sock.isClosed();
 		sock.close();
 		return ret;
 	}
@@ -255,12 +223,7 @@ public class Client {
 	}
 
 	public void startAskForNewMessages(final String receiver) {
-		start(new Runnable() {
-			@Override
-			public void run() {
-				doAskForNewMessages(receiver);
-			}
-		});
+		start(() -> doAskForNewMessages(receiver));
 	}
 
 	public void askForNewMessages() {
