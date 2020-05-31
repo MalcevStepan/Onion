@@ -168,7 +168,7 @@ public class ChatActivity extends AppCompatActivity {
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
-		pathToAudio = this.getCacheDir().getAbsolutePath() + "/Media/Audio/";
+		pathToAudio = this.getCacheDir().getAbsolutePath() + "/Media/Audio";
 		pathToPhotoAndVideo = this.getCacheDir().getAbsolutePath() + "/Media/Video";
 		new File(pathToAudio).mkdirs();
 		new File(pathToPhotoAndVideo).mkdir();
@@ -675,8 +675,6 @@ public class ChatActivity extends AppCompatActivity {
 
 
 			//holder.message.setText(content);
-
-
 			if (!videoContent.equals("0")) {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
@@ -696,8 +694,8 @@ public class ChatActivity extends AppCompatActivity {
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
-				File receivedAudio = new File(pathToAudio + "received" + time + ".3gpp");
-				Log.i("PATH_TO_AUDIO", pathToAudio + "received" + time + ".3gpp");
+				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
+				Log.i("PATH_TO_AUDIO", pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
 				if (receivedAudio.exists())
 					receivedAudio.delete();
 				FileOutputStream out = null;
@@ -707,7 +705,7 @@ public class ChatActivity extends AppCompatActivity {
 					e.printStackTrace();
 				}
 				if (out == null) return;
-				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "received" + time + ".3gpp"));
+				holder.fab.setOnClickListener(view -> playStart(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp"));
 			} else {
 				Log.i("CONTENT", content);
 				holder.message.setVisibility(View.VISIBLE);
