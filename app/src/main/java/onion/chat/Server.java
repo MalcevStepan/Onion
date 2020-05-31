@@ -185,7 +185,7 @@ public class Server {
 								Log.e("TEST", new String(result));
 								break;
 							case 2:
-								//Client.getInstance(context).startSendPendingMessages(senderName);
+								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 3:
 								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());
