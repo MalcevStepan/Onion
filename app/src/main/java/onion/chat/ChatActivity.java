@@ -677,9 +677,9 @@ public class ChatActivity extends AppCompatActivity {
 					e.printStackTrace();
 				}
 				if (out == null) return;
-				/*holder.fab.setOnClickListener(view -> {
+				holder.fab.setOnClickListener(view -> {
 					playStart(pathToAudio + "/received" + position + ".3gpp");
-				});*/
+				});
 			}
 
 			holder.time.setText(time);
