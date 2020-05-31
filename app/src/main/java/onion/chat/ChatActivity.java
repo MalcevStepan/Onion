@@ -608,7 +608,6 @@ public class ChatActivity extends AppCompatActivity {
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
 			String content = cursor.getString(cursor.getColumnIndex("content"));
 			byte[] audio = cursor.getBlob(cursor.getColumnIndex("audioContent"));
-			Log.i("AUDIO_INDEX", String.valueOf(cursor.getColumnIndex("audioContent")));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -668,7 +667,7 @@ public class ChatActivity extends AppCompatActivity {
 				holder.message.setText(Utils.linkify(ChatActivity.this, content));
 			} else {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audio.length));
-				holder.message.setVisibility(View.INVISIBLE);
+				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
 				File receivedAudio = new File(pathToAudio + "/received" + date.getTime() + ".3gpp");
