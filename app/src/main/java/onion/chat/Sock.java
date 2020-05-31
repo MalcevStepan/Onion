@@ -173,30 +173,13 @@ public class Sock {
 		}
 	}
 
-	public boolean writeMessage(String sender, String message) {
+	public boolean writeMessage(String sender, byte[] content, MessageType type) {
 		try {
 			if (writer != null)
-				writer.write(new byte[]{1});
+				writer.write(new byte[]{type.value});
 			else
 				return false;
-			if (writeBytes(sender, message.getBytes())) {
-				flush();
-				return true;
-			} else
-				return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public boolean writeImage(String sender, byte[] image) {
-		try {
-			if (writer != null)
-				writer.write(new byte[]{3});
-			else
-				return false;
-			if (writeBytes(sender, image)) {
+			if (writeBytes(sender, content)) {
 				flush();
 				return true;
 			} else

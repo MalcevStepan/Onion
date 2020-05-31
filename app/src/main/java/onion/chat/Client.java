@@ -18,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
-
 	private static Client instance;
 	Tor tor;
 	Database db;
@@ -53,7 +52,7 @@ public class Client {
 		return connect(receiver).writeAdd(tor.getID(), db.getName());
 	}
 
-	private boolean sendMsg(Sock sock, String receiver, String content) {
+	private boolean sendMsg(Sock sock, String receiver, byte[] content, MessageType type) {
 		if (sock.isClosed()) {
 			return false;
 		}
@@ -61,19 +60,7 @@ public class Client {
 		String sender = tor.getID();
 		if (receiver.equals(sender)) return false;
 
-		return sock.writeMessage(sender, content);
-	}
-
-	private boolean sendImage(Sock sock, String receiver, byte[] photo) {
-		if (sock.isClosed()) {
-			return false;
-		}
-
-		String sender = tor.getID();
-		if (receiver.equals(sender)) return false;
-
-		return sock.writeImage(sender, photo);
-
+		return sock.writeMessage(sender, content, type);
 	}
 
 	public void startSendPendingFriends() {
@@ -120,16 +107,9 @@ public class Client {
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
-				if (type.equals("msg")) {
-					if (sendMsg(sock, receiver, new String(content))) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message sent");
-					}
-				} else if (type.equals("photo")) {
-					if (sendImage(sock, receiver, content)) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message photo sent");
-					}
+				if (sendMsg(sock, receiver, content, MessageType.getEnum(type))) {
+					db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+					log(type + " sent");
 				}
 			}
 			sock.close();
