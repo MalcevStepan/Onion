@@ -15,6 +15,8 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -48,6 +50,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -79,7 +82,7 @@ public class ChatActivity extends AppCompatActivity {
 	private String pathToPhotoAndVideo;
 	ChatAdapter adapter;
 	RecyclerView recycler;
-	ImageView video, micro, photo, send, gallery;
+	ImageView videoIcon, microIcon, photoIcon, sendIcon, galleryIcon;
 	EditText edit;
 	TextView noMessages;
 	Cursor cursor;
@@ -168,13 +171,13 @@ public class ChatActivity extends AppCompatActivity {
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
-		pathToAudio = this.getCacheDir().getAbsolutePath() + "/Media/Audio";
-		pathToPhotoAndVideo = this.getCacheDir().getAbsolutePath() + "/Media/Video";
+		pathToAudio = this.getCacheDir().getPath() + "/Media/Audio";
+		pathToPhotoAndVideo = this.getCacheDir().getPath() + "/Media/Video";
 		new File(pathToAudio).mkdirs();
 		new File(pathToPhotoAndVideo).mkdir();
 
 		sender = tor.getID();
-		send = findViewById(R.id.send);
+		sendIcon = findViewById(R.id.send);
 		edit = findViewById(R.id.editmessage);
 		noMessages = findViewById(R.id.noMessages);
 		client = Client.getInstance(this);
@@ -207,7 +210,7 @@ public class ChatActivity extends AppCompatActivity {
 		final View redCircle = findViewById(R.id.redCircle);
 		final Animation redCircleAnim = AnimationUtils.loadAnimation(this, R.anim.red_circle_anim);
 		// SENDING MESSAGE
-		send.setOnClickListener(view -> {
+		sendIcon.setOnClickListener(view -> {
 			if (sender == null || sender.trim().equals("")) {
 				sendPendingAndUpdate();
 				return;
@@ -231,8 +234,8 @@ public class ChatActivity extends AppCompatActivity {
 		});
 
 		// RECORDING AND SENDING AUDIO MESSAGE
-		micro = findViewById(R.id.micro);
-		micro.setOnTouchListener((view, motionEvent) -> {
+		microIcon = findViewById(R.id.micro);
+		microIcon.setOnTouchListener((view, motionEvent) -> {
 			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
 				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
 						RECORD_AUDIO);
@@ -245,7 +248,7 @@ public class ChatActivity extends AppCompatActivity {
 						redCircle.startAnimation(redCircleAnim);
 						edit.setVisibility(View.INVISIBLE);
 						attach.setVisibility(View.INVISIBLE);
-						send.setVisibility(View.INVISIBLE);
+						sendIcon.setVisibility(View.INVISIBLE);
 						break;
 					case MotionEvent.ACTION_CANCEL:
 					case MotionEvent.ACTION_UP:
@@ -254,7 +257,7 @@ public class ChatActivity extends AppCompatActivity {
 							redCircle.setVisibility(View.INVISIBLE);
 							edit.setVisibility(View.VISIBLE);
 							attach.setVisibility(View.VISIBLE);
-							send.setVisibility(View.VISIBLE);
+							sendIcon.setVisibility(View.VISIBLE);
 							if (sender == null || sender.trim().equals("")) {
 								sendPendingAndUpdate();
 								break;
@@ -280,7 +283,7 @@ public class ChatActivity extends AppCompatActivity {
 								redCircle.setVisibility(View.INVISIBLE);
 								edit.setVisibility(View.VISIBLE);
 								attach.setVisibility(View.VISIBLE);
-								send.setVisibility(View.VISIBLE);
+								sendIcon.setVisibility(View.VISIBLE);
 							}, 1500 - System.currentTimeMillis() + pressTime);
 						}
 						break;
@@ -288,42 +291,42 @@ public class ChatActivity extends AppCompatActivity {
 			return false;
 		});
 
-		photo = findViewById(R.id.takePhoto);
-		video = findViewById(R.id.videoCapture);
-		gallery = findViewById(R.id.gallery);
+		photoIcon = findViewById(R.id.takePhoto);
+		videoIcon = findViewById(R.id.videoCapture);
+		galleryIcon = findViewById(R.id.gallery);
 		// CHOOSING MEDIA
 		attach.setOnClickListener(view -> {
-			if (micro.getVisibility() == View.GONE) {
+			if (microIcon.getVisibility() == View.GONE) {
 				edit.setVisibility(View.VISIBLE);
-				send.setVisibility(View.VISIBLE);
-				micro.setVisibility(View.VISIBLE);
-				photo.setVisibility(View.GONE);
-				video.setVisibility(View.GONE);
-				gallery.setVisibility(View.GONE);
+				sendIcon.setVisibility(View.VISIBLE);
+				microIcon.setVisibility(View.VISIBLE);
+				photoIcon.setVisibility(View.GONE);
+				videoIcon.setVisibility(View.GONE);
+				galleryIcon.setVisibility(View.GONE);
 			} else {
 				edit.setVisibility(View.GONE);
-				send.setVisibility(View.GONE);
-				micro.setVisibility(View.GONE);
-				photo.setVisibility(View.VISIBLE);
-				video.setVisibility(View.VISIBLE);
-				gallery.setVisibility(View.VISIBLE);
+				sendIcon.setVisibility(View.GONE);
+				microIcon.setVisibility(View.GONE);
+				photoIcon.setVisibility(View.VISIBLE);
+				videoIcon.setVisibility(View.VISIBLE);
+				galleryIcon.setVisibility(View.VISIBLE);
 			}
 		});
 
 		// TAKE PHOTO
-		photo.setOnClickListener(view -> {
+		photoIcon.setOnClickListener(view -> {
 			Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			startActivityForResult(takePicture, TAKE_PHOTO_SUCCESS);
 		});
 
 		// CAPTURE VIDEO
-		video.setOnClickListener(view -> {
+		videoIcon.setOnClickListener(view -> {
 			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
 		// OPEN GALLERY
-		gallery.setOnClickListener(view -> {
+		galleryIcon.setOnClickListener(view -> {
 			Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 			intent.setType("image/*");
 			intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
@@ -333,8 +336,8 @@ public class ChatActivity extends AppCompatActivity {
 		startService(new Intent(this, HostService.class));
 
 		final float a = 0.5f;
-		send.setAlpha(a);
-		send.setClickable(false);
+		sendIcon.setAlpha(a);
+		sendIcon.setClickable(false);
 		edit.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -343,11 +346,11 @@ public class ChatActivity extends AppCompatActivity {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				if (s.toString().trim().length() == 0) {
-					send.setAlpha(a);
-					send.setClickable(false);
+					sendIcon.setAlpha(a);
+					sendIcon.setClickable(false);
 				} else {
-					send.setAlpha(0.7f);
-					send.setClickable(true);
+					sendIcon.setAlpha(0.7f);
+					sendIcon.setClickable(true);
 				}
 			}
 
@@ -364,6 +367,8 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+		FileInputStream fis = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		switch (requestCode) {
 			case GALLERY_SUCCESS:
 				if (resultCode == RESULT_OK) {
@@ -372,8 +377,6 @@ public class ChatActivity extends AppCompatActivity {
 						int currentItem = 0;
 						while (currentItem < count) {
 							Uri imageUri = data.getClipData().getItemAt(currentItem).getUri();
-							ByteArrayOutputStream baos = new ByteArrayOutputStream();
-							FileInputStream fis = null;
 							try {
 								fis = new FileInputStream(new File(String.valueOf(imageUri)));
 								byte[] buf = new byte[1024];
@@ -394,8 +397,23 @@ public class ChatActivity extends AppCompatActivity {
 							currentItem = currentItem + 1;
 						}
 					} else if (data.getData() != null) {
-						String imagePath = data.getData().getPath();
-
+						try {
+							fis = new FileInputStream(new File(Objects.requireNonNull(data.getData().getPath())));
+							byte[] buf = new byte[1024];
+							int n;
+							while (-1 != (n = fis.read(buf)))
+								baos.write(buf, 0, n);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						if (fis == null) {
+							Log.i("PHOTO", "failed to convert photo");
+							break;
+						}
+						db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(baos.toByteArray(), StandardCharsets.UTF_8));
+						sendPendingAndUpdate();
+						recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+						rep = 0;
 					}
 				}
 				break;
@@ -408,15 +426,25 @@ public class ChatActivity extends AppCompatActivity {
 			case TAKE_PHOTO_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Photo taked", Toast.LENGTH_SHORT).show();
+					Bitmap photo = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
+					ByteArrayOutputStream stream = new ByteArrayOutputStream();
+					assert photo != null;
+					photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+					byte[] byteArray = stream.toByteArray();
+					photo.recycle();
+					db.addPendingOutgoingMessage(sender, address, "0", "0", "0", new String(byteArray, StandardCharsets.UTF_8));
+					sendPendingAndUpdate();
+					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+					rep = 0;
 				}
 				break;
 		}
 		edit.setVisibility(View.VISIBLE);
-		send.setVisibility(View.VISIBLE);
-		micro.setVisibility(View.VISIBLE);
-		photo.setVisibility(View.GONE);
-		video.setVisibility(View.GONE);
-		gallery.setVisibility(View.GONE);
+		sendIcon.setVisibility(View.VISIBLE);
+		microIcon.setVisibility(View.VISIBLE);
+		photoIcon.setVisibility(View.GONE);
+		videoIcon.setVisibility(View.GONE);
+		galleryIcon.setVisibility(View.GONE);
 	}
 
 	public void recordStart() {
@@ -591,6 +619,8 @@ public class ChatActivity extends AppCompatActivity {
 		private View abort;
 		private FloatingActionButton fab;
 		private ProgressBar progress;
+		private VideoView video;
+		private ImageView photo;
 
 		public ChatHolder(View v) {
 			super(v);
@@ -604,6 +634,8 @@ public class ChatActivity extends AppCompatActivity {
 			abort = v.findViewById(R.id.abort);
 			fab = v.findViewById(R.id.playAudio);
 			progress = v.findViewById(R.id.audioProgress);
+			photo = v.findViewById(R.id.photoView);
+			video = v.findViewById(R.id.videoView);
 		}
 	}
 
@@ -684,11 +716,19 @@ public class ChatActivity extends AppCompatActivity {
 				holder.message.setText(Utils.linkify(ChatActivity.this, "VIDEO"));
 			} else if (!photoContent.equals("0")) {
 				Log.i("CONTENT", content);
-				holder.message.setVisibility(View.VISIBLE);
+				holder.photo.setVisibility(View.VISIBLE);
+				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.GONE);
 				holder.fab.setVisibility(View.GONE);
-				holder.message.setMovementMethod(LinkMovementMethod.getInstance());
-				holder.message.setText(Utils.linkify(ChatActivity.this, "PHOTO"));
+				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
+				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
+				FileOutputStream out = null;
+				try {
+					(out = new FileOutputStream(receivedPhoto)).write(photoContent.getBytes(StandardCharsets.UTF_8));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				holder.photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
 			} else if (!audioContent.equals("0")) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(audioContent.length()));
 				holder.message.setVisibility(View.GONE);
@@ -696,8 +736,6 @@ public class ChatActivity extends AppCompatActivity {
 				holder.fab.setVisibility(View.VISIBLE);
 				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
 				Log.i("PATH_TO_AUDIO", pathToAudio + "/received" + time.replaceAll(" ", "_") + ".3gpp");
-				if (receivedAudio.exists())
-					receivedAudio.delete();
 				FileOutputStream out = null;
 				try {
 					(out = new FileOutputStream(receivedAudio)).write(audioContent.getBytes(StandardCharsets.UTF_8));

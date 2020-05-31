@@ -65,6 +65,16 @@
 					android:elevation="10dp"
 					android:src="@drawable/play"
 					card_view:fabSize="mini" />
+				<ImageView
+					android:layout_width="match_parent"
+					android:layout_height="200dp"
+					android:id="@+id/photoView"
+					android:visibility="gone"/>
+				<VideoView
+					android:layout_width="match_parent"
+					android:layout_height="200dp"
+					android:id="@+id/videoView"
+					android:visibility="gone"/>
 
 				<ProgressBar
 					android:id="@+id/audioProgress"
