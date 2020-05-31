@@ -134,9 +134,15 @@ public class ChatActivity extends AppCompatActivity {
 		noMessages.setVisibility(cursor.getCount() > 0 ? View.GONE : View.VISIBLE);
 	}
 
-	void sendPendingAndUpdate() {
+	void sendPendingAndUpdateMessages() {
 		//if(!client.isBusy()) {
 		client.startSendPendingMessages(address);
+		//}
+		update();
+	}
+	void sendPendingAndUpdateAudio(){
+		//if(!client.isBusy()) {
+		client.startSendPendingAudio(address);
 		//}
 		update();
 	}
@@ -205,7 +211,7 @@ public class ChatActivity extends AppCompatActivity {
 		send.setOnClickListener(view -> {
 			String sender = tor.getID();
 			if (sender == null || sender.trim().equals("")) {
-				sendPendingAndUpdate();
+				sendPendingAndUpdateMessages();
 				return;
 			}
 
@@ -217,7 +223,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			edit.setText("");
 
-			sendPendingAndUpdate();
+			sendPendingAndUpdateMessages();
 
 			//recycler.scrollToPosition(cursor.getCount() - 1);
 
@@ -253,7 +259,7 @@ public class ChatActivity extends AppCompatActivity {
 							send.setVisibility(View.VISIBLE);
 							String sender = tor.getID();
 							if (sender == null || sender.trim().equals("")) {
-								sendPendingAndUpdate();
+								sendPendingAndUpdateAudio();
 								break;
 							}
 							File audio = new File(pathToAudio + "/record.3gpp");
@@ -269,7 +275,7 @@ public class ChatActivity extends AppCompatActivity {
 							}
 							if (in == null) break;
 							db.addPendingOutgoingAudioMessage(sender, address, data);
-							sendPendingAndUpdate();
+							sendPendingAndUpdateAudio();
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
 						} else {
@@ -437,7 +443,7 @@ public class ChatActivity extends AppCompatActivity {
 			mediaPlayer = new MediaPlayer();
 			mediaPlayer.setDataSource(pathToAudio);
 			mediaPlayer.prepare();
-			mediaPlayer.start();
+			mediaPlayer.setOnPreparedListener(mp -> mediaPlayer.start());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -485,7 +491,8 @@ public class ChatActivity extends AppCompatActivity {
 
 		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy()) {
-				sendPendingAndUpdate();
+				sendPendingAndUpdateMessages();
+				sendPendingAndUpdateAudio();
 			}
 		}));
 
@@ -500,7 +507,8 @@ public class ChatActivity extends AppCompatActivity {
 			if (!loading) update();
 		}));
 
-		sendPendingAndUpdate();
+		sendPendingAndUpdateMessages();
+		sendPendingAndUpdateAudio();
 
 
 		timer = new Timer();
@@ -606,6 +614,7 @@ public class ChatActivity extends AppCompatActivity {
 			final long id = cursor.getLong(cursor.getColumnIndex("_id"));
 			String content = cursor.getString(cursor.getColumnIndex("content"));
 			byte[] audio = cursor.getBlob(cursor.getColumnIndex("audioContent"));
+			Log.i("LENGTH_AUDIO", String.valueOf(audio.length));
 			String sender = cursor.getString(cursor.getColumnIndex("sender"));
 			String time = date(cursor.getString(cursor.getColumnIndex("time")));
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
@@ -676,8 +685,6 @@ public class ChatActivity extends AppCompatActivity {
 				try {
 					out = new FileOutputStream(receivedAudio);
 					out.write(audio);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

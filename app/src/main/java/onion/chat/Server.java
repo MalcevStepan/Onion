@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Server {
 
@@ -185,7 +186,51 @@ public class Server {
 
         }
 
+        if ("audio".equals(tokens[0]) && tokens.length == 8) {
 
+            String op = tokens[0];
+            String receiver = tokens[1];
+            String sender = tokens[2];
+            String sendername = tokens[3];
+            String time = tokens[4];
+            String content = tokens[5];
+            String pubkey = tokens[6];
+            String signature = tokens[7];
+
+            if (!receiver.equals(tor.getID())) {
+                log("message wrong address");
+                return "";
+            }
+            log("audio address ok");
+
+            if (!tor.checksig(
+                    sender,
+                    Utils.base64decode(pubkey),
+                    Utils.base64decode(signature),
+                    (op + " " + receiver + " " + sender + " " + sendername + " " + time + " " + content).getBytes())) {
+                log("audio invalid signature");
+                return "";
+            }
+            log("audio signature ok");
+
+            sendername = new String(Utils.base64decode(sendername), StandardCharsets.UTF_8);
+
+            content = new String(Utils.base64decode(content), StandardCharsets.UTF_8);
+
+            long ltime = Long.parseLong(time);
+            db.addUnreadIncomingAudio(sender, sendername, receiver, content, ltime);
+
+            if (listener != null) listener.onChange();
+
+            if (db.hasContact(sender)) {
+                notifier.onMessage();
+            }
+
+            log("add ok");
+
+            return "1";
+
+        }
         if ("msg".equals(tokens[0]) && tokens.length == 8) {
 
             String op = tokens[0];
@@ -280,6 +325,7 @@ public class Server {
         BufferedWriter w = new BufferedWriter(new OutputStreamWriter(os));
         while (true) {
             String request = r.readLine();
+
             if (request == null) break;
             request = request.trim();
             if (request.equals("")) break;

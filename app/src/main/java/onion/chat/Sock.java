@@ -26,268 +26,267 @@ import java.net.SocketTimeoutException;
 
 public class Sock {
 
-    static final int timeout = 60000;
-    Socket sock;
-    BufferedReader reader;
-    BufferedWriter writer;
+	static final int timeout = 60000;
+	Socket sock;
+	BufferedReader reader;
+	BufferedWriter writer;
 
-    public Sock(Context context, String host, int p) {
+	public Sock(Context context, String host, int p) {
 
-        log(host);
+		log(host);
 
-        sock = new Socket();
+		sock = new Socket();
 
-        try {
+		try {
 
-            Tor tor = Tor.getInstance(context);
+			Tor tor = Tor.getInstance(context);
 
-            try {
+			try {
 
-                sock.connect(new InetSocketAddress("127.0.0.1", tor.getPort()), timeout);
+				sock.connect(new InetSocketAddress("127.0.0.1", tor.getPort()), timeout);
 
-            } catch (SocketTimeoutException ex3) {
-                log("timeout");
-                try {
-                    sock.close();
-                } catch (IOException ex2) {
-                }
-            } catch (IOException ex) {
-                log("failed to open socket");
-                try {
-                    sock.close();
-                } catch (IOException ex2) {
-                }
-            } catch (Exception ex) {
-                log("sock connect err");
-                try {
-                    sock.close();
-                } catch (IOException ex2) {
-                }
-            }
+			} catch (SocketTimeoutException ex3) {
+				log("timeout");
+				try {
+					sock.close();
+				} catch (IOException ex2) {
+				}
+			} catch (IOException ex) {
+				log("failed to open socket");
+				try {
+					sock.close();
+				} catch (IOException ex2) {
+				}
+			} catch (Exception ex) {
+				log("sock connect err");
+				try {
+					sock.close();
+				} catch (IOException ex2) {
+				}
+			}
 
-            sock.setSoTimeout(timeout);
+			sock.setSoTimeout(timeout);
 
-            // connect to proxy
-            {
-                //    ByteArrayOutputStream os = new ByteArrayOutputStream();
+			// connect to proxy
+			{
+				//    ByteArrayOutputStream os = new ByteArrayOutputStream();
 
-                OutputStream os = sock.getOutputStream();
+				OutputStream os = sock.getOutputStream();
 
-                os.write(4); // socks 4a
-                os.write(1); // stream
+				os.write(4); // socks 4a
+				os.write(1); // stream
 
-                //Log.i(TAG, "proto " + u.getProtocol());
-                //if (p < 0 && u.getProtocol().equals("http")) p = 80;
-                //if (p < 0 && u.getProtocol().equals("https")) p = 443;
-                //Log.i(TAG, "port " + p);
-                os.write((p >> 8) & 0xff);
-                os.write((p >> 0) & 0xff);
+				//Log.i(TAG, "proto " + u.getProtocol());
+				//if (p < 0 && u.getProtocol().equals("http")) p = 80;
+				//if (p < 0 && u.getProtocol().equals("https")) p = 443;
+				//Log.i(TAG, "port " + p);
+				os.write((p >> 8) & 0xff);
+				os.write((p >> 0) & 0xff);
 
-                os.write(0);
-                os.write(0);
-                os.write(0);
-                os.write(1);
+				os.write(0);
+				os.write(0);
+				os.write(0);
+				os.write(1);
 
-                os.write(0);
+				os.write(0);
 
-                os.write(host.getBytes());
-                os.write(0);
+				os.write(host.getBytes());
+				os.write(0);
 
-                os.flush();
+				os.flush();
 
-                //    sock.
-            }
-
-
-            // get proxy response
-
-            {
-                InputStream is = sock.getInputStream();
-
-                byte[] h = new byte[8];
-                is.read(h);
-
-                if (h[0] != 0) {
-                    log("unknown error");
-                    try {
-                        sock.close();
-                    } catch (IOException ex2) {
-                    }
-                    return;
-                }
-
-                if (h[1] != 0x5a) {
-
-                    if (h[1] == 0x5b) {
-                        log("request rejected or failed");
-                        try {
-                            sock.close();
-                        } catch (IOException ex2) {
-                        }
-                        return;
-                    }
-
-                    log("unknown error");
-                    try {
-                        sock.close();
-                    } catch (IOException ex2) {
-                    }
-                    return;
-                }
-
-            }
+				//    sock.
+			}
 
 
-            reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            writer = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
+			// get proxy response
 
-        } catch (SocketTimeoutException ex3) {
-            log("timeout");
-            try {
-                sock.close();
-            } catch (IOException ex2) {
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log("failed to connect to tor");
-            try {
-                sock.close();
-            } catch (IOException ex2) {
-            }
-        }
+			{
+				InputStream is = sock.getInputStream();
 
-    }
+				byte[] h = new byte[8];
+				is.read(h);
 
-    private void log(String s) {
-        if (!BuildConfig.DEBUG) return;
-        Log.i("Sock", s);
-    }
+				if (h[0] != 0) {
+					log("unknown error");
+					try {
+						sock.close();
+					} catch (IOException ex2) {
+					}
+					return;
+				}
 
-    public void writeLine(String... ss) {
-        String s = "";
+				if (h[1] != 0x5a) {
 
-        if (ss.length > 0) s = ss[0];
-        for (int i = 1; i < ss.length; i++)
-            s += " " + ss[i];
+					if (h[1] == 0x5b) {
+						log("request rejected or failed");
+						try {
+							sock.close();
+						} catch (IOException ex2) {
+						}
+						return;
+					}
 
-        log(" >> " + s);
-        if (writer != null) {
-            try {
-                writer.write(s + "\r\n");
-            } catch (SocketTimeoutException ex) {
-                log("timeout");
-                try {
-                    sock.close();
-                } catch (IOException ignored) {
-                }
-            } catch (Exception ignored) {
-            }
-        }
-    }
+					log("unknown error");
+					try {
+						sock.close();
+					} catch (IOException ex2) {
+					}
+					return;
+				}
 
-    public void writeAudio(byte[] audio){
-        if(writer!=null){
-            char[] content = new char[audio.length];
-            for (int i = 0; i < audio.length; i++) content[i] = (char)audio[i];
-            try {
-                writer.write(content);
-            }catch (IOException io){
-                log("timeout");
-                try {
-                    sock.close();
-                } catch (IOException ignored) {
-                }
-            }
-        }
-    }
+			}
 
-    public String readLine() {
-        String s = null;
-        if (reader != null) {
-            try {
-                s = reader.readLine();
-            } catch (SocketTimeoutException ex) {
-                log("timeout");
-                try {
-                    sock.close();
-                } catch (IOException ex2) {
-                }
-            } catch (Exception ex) {
-            }
-        }
-        if (s == null)
-            s = "";
-        else
-            s = s.trim();
-        log(" << " + s);
-        return s;
-    }
 
-    public boolean readBool() {
-        return readLine().equals("1");
-    }
+			reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+			writer = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
 
-    public boolean queryBool(String... request) {
-        writeLine(request);
-        flush();
-        return readBool();
-    }
-    public boolean queryBoolAudio(byte[] audio, String... request) {
-        writeLine(request);
-        writeAudio(audio);
-        flush();
-        return readBool();
-    }
+		} catch (SocketTimeoutException ex3) {
+			log("timeout");
+			try {
+				sock.close();
+			} catch (IOException ex2) {
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			log("failed to connect to tor");
+			try {
+				sock.close();
+			} catch (IOException ex2) {
+			}
+		}
 
-    public void queryOrClose(String... request) {
-        if (!queryBool(request)) close();
-    }
+	}
 
-    public boolean queryAndClose(String... request) {
-        boolean x = queryBool(request);
-        close();
-        return x;
-    }
+	private void log(String s) {
+		if (!BuildConfig.DEBUG) return;
+		Log.i("Sock", s);
+	}
 
-    public void flush() {
-        if (writer != null) {
-            try {
-                writer.flush();
-            } catch (SocketTimeoutException ex) {
-                log("timeout");
-                try {
-                    sock.close();
-                } catch (IOException ex2) {
-                }
-            } catch (Exception ex) {
-            }
-        }
-    }
+	public void writeLine(String... ss) {
+		String s = "";
 
-    public void close() {
+		if (ss.length > 0) s = ss[0];
+		for (int i = 1; i < ss.length; i++)
+			s += " " + ss[i];
 
-        flush();
+		log(" >> " + s);
+		if (writer != null) {
+			try {
+				writer.write(s + "\r\n");
+			} catch (SocketTimeoutException ex) {
+				log("timeout");
+				try {
+					sock.close();
+				} catch (IOException ignored) {
+				}
+			} catch (Exception ignored) {
+			}
+		}
+	}
 
-        if (sock != null) {
-            try {
-                sock.close();
-            } catch (Exception ex) {
-            }
-        }
+	public void writeAudio(byte[] audio) {
+		log("write audio");
+		if (writer != null) {
+			char[] content = new char[audio.length + 1];
+			int i;
+			for (i = 0; i < audio.length; i++) content[i] = (char) audio[i];
+			content[i] = '\n';
+			try {
+				writer.write(content);
+				log("success write");
+			} catch (IOException io) {
+				log("timeout");
+				try {
+					sock.close();
+				} catch (IOException ignored) {
+				}
+			}
+		}
+	}
 
-        reader = null;
-        writer = null;
-        sock = null;
+	public String readLine() {
+		String s = null;
+		if (reader != null) {
+			try {
+				s = reader.readLine();
+				Log.i("READER", s);
+			} catch (SocketTimeoutException ex) {
+				log("timeout");
+				try {
+					sock.close();
+				} catch (IOException ex2) {
+				}
+			} catch (Exception ex) {
+			}
+		}
+		if (s == null)
+			s = "";
+		else
+			s = s.trim();
+		log(" << " + s);
+		return s;
+	}
 
-    }
+	public boolean readBool() {
+		return readLine().equals("1");
+	}
 
-    public boolean isClosed() {
-        //try {
-        return sock.isClosed();
+	public boolean queryBool(String... request) {
+		writeLine(request);
+		flush();
+		return readBool();
+	}
+
+	public void queryOrClose(String... request) {
+		if (!queryBool(request)) close();
+	}
+
+	public boolean queryAndClose(String... request) {
+		boolean x = queryBool(request);
+		close();
+		return x;
+	}
+
+	public void flush() {
+		if (writer != null) {
+			try {
+				writer.flush();
+			} catch (SocketTimeoutException ex) {
+				log("timeout");
+				try {
+					sock.close();
+				} catch (IOException ex2) {
+				}
+			} catch (Exception ex) {
+			}
+		}
+	}
+
+	public void close() {
+
+		flush();
+
+		if (sock != null) {
+			try {
+				sock.close();
+			} catch (Exception ex) {
+			}
+		}
+
+		reader = null;
+		writer = null;
+		sock = null;
+
+	}
+
+	public boolean isClosed() {
+		//try {
+		return sock.isClosed();
         /*} catch(IOException ex) {
             return true;
         }*/
-    }
+	}
 
 
 }

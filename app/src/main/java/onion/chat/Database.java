@@ -17,6 +17,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 public class Database extends SQLiteOpenHelper {
 
 	private static Database instance;
@@ -86,6 +89,24 @@ public class Database extends SQLiteOpenHelper {
 			v.put("receiver", receiver);
 			v.put("content", content);
 			v.put("audioContent", new byte[]{0});
+			v.put("time", time);
+			n = getWritableDatabase().insert("messages", null, v);
+		}
+		if (n > 0) {
+			getWritableDatabase().execSQL("UPDATE contacts SET pending=pending+1 WHERE address=?", new String[]{sender});
+		}
+		return n;
+	}
+
+	public synchronized long addUnreadIncomingAudio(String sender, String sendername, String receiver, String content, long time) {
+		addContact(sender, false, true, sendername);
+		long n;
+		{
+			ContentValues v = new ContentValues();
+			v.put("sender", sender);
+			v.put("receiver", receiver);
+			v.put("content", "0");
+			v.put("audioContent", content.getBytes(StandardCharsets.UTF_8));
 			v.put("time", time);
 			n = getWritableDatabase().insert("messages", null, v);
 		}

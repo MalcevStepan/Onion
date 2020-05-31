@@ -15,6 +15,7 @@ import android.database.Cursor;
 import android.util.Log;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
@@ -96,7 +97,8 @@ public class Client {
 
 	}
 
-	private boolean sendAudioMsg(Sock sock, String receiver, String time, byte[] content) {
+	private boolean sendAudioMsg(Sock sock, String receiver, String time, String content) {
+		log("send audio");
 		if (sock.isClosed()) {
 			return false;
 		}
@@ -105,17 +107,17 @@ public class Client {
 
 		String n = db.getName();
 		if (n == null || n.trim().isEmpty()) n = " ";
-		n = Utils.base64encode(n.getBytes(Charset.forName("UTF-8")));
+		n = Utils.base64encode(n.getBytes(StandardCharsets.UTF_8));
 
-		return sock.queryBoolAudio(
-				content,
-				"msg",
+		return sock.queryBool(
+				"audio",
 				receiver,
 				sender,
 				n,
 				time,
+				content,
 				Utils.base64encode(tor.pubkey()),
-				Utils.base64encode(tor.sign(("msg " + receiver + " " + sender + " " + n + " " + time + " ").getBytes()))
+				Utils.base64encode(tor.sign(("audio " + receiver + " " + sender + " " + n + " " + time + content).getBytes()))
 		);
 	}
 
@@ -183,7 +185,9 @@ public class Client {
 				log("try to send audio message");
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String time = cur.getString(cur.getColumnIndex("time"));
-				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
+				byte[] bytes = cur.getBlob(cur.getColumnIndex("audioContent"));
+				String content = new String(bytes, StandardCharsets.UTF_8);
+				Log.i("SENDED_AUIDO_LENGTH", String.valueOf(bytes.length));
 				if (sendAudioMsg(sock, receiver, time, content)) {
 					db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 					log("audio sent");
@@ -194,9 +198,12 @@ public class Client {
 		cur.close();
 	}
 
-	public void startSendPendingMessages(final String address) {
+	public synchronized void startSendPendingMessages(final String address) {
 		log("start send pending messages");
 		start(() -> doSendPendingMessages(address));
+	}
+	public synchronized void startSendPendingAudio(final String address) {
+		log("start send pending audio");
 		start(() -> doSendPendingAudioMessages(address));
 	}
 
