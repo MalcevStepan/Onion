@@ -81,7 +81,6 @@ public class ChatActivity extends AppCompatActivity {
 	TextView noMessages;
 	Cursor cursor;
 	Database db;
-	Date date;
 	Tor tor;
 	String address;
 	Client client;
@@ -162,7 +161,6 @@ public class ChatActivity extends AppCompatActivity {
 
 		setContentView(R.layout.activity_chat);
 
-		date = new Date();
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
 
@@ -670,7 +668,8 @@ public class ChatActivity extends AppCompatActivity {
 				holder.message.setVisibility(View.GONE);
 				holder.progress.setVisibility(View.VISIBLE);
 				holder.fab.setVisibility(View.VISIBLE);
-				File receivedAudio = new File(pathToAudio + "/received" + date.getTime() + ".3gpp");
+				File receivedAudio = new File(pathToAudio + "received" + time + ".3gpp");
+				Log.i("PATH_TO_AUDIO", pathToAudio + "received" + time + ".3gpp");
 				if (receivedAudio.exists())
 					receivedAudio.delete();
 				FileOutputStream out = null;
@@ -684,7 +683,7 @@ public class ChatActivity extends AppCompatActivity {
 				}
 				if (out == null) return;
 				holder.fab.setOnClickListener(view -> {
-					playStart(pathToAudio + "/received" + position + ".3gpp");
+					playStart(pathToAudio + "received" + time + ".3gpp");
 				});
 			}
 
