@@ -1,113 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="horizontal">
 
-    <FrameLayout
-        android:id="@+id/left"
-        android:layout_width="64dp"
-        android:layout_height="match_parent">
+	<FrameLayout
+		android:id="@+id/left"
+		android:layout_width="64dp"
+		android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/abort"
-            android:background="?selectableItemBackground"
-            android:layout_gravity="center_vertical|right"
-            android:padding="8dp"
-            android:alpha="0.5"
-            android:scaleType="center"
-            android:src="@drawable/ic_close_black_24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+		<ImageView
+			android:id="@+id/abort"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_vertical|right"
+			android:alpha="0.5"
+			android:background="?selectableItemBackground"
+			android:padding="8dp"
+			android:scaleType="center"
+			android:src="@drawable/ic_close_black_24dp" />
 
-    </FrameLayout>
+	</FrameLayout>
 
-    <androidx.cardview.widget.CardView
-        android:layout_weight="1"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:background="#fff"
-        card_view:cardBackgroundColor="#fff"
-        card_view:cardElevation="3dp"
-        card_view:cardUseCompatPadding="true"
-        xmlns:card_view="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/card"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        card_view:cardCornerRadius="6dp">
+	<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:card_view="http://schemas.android.com/apk/res-auto"
+		android:id="@+id/card"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
+		android:background="#fff"
+		card_view:cardBackgroundColor="#fff"
+		card_view:cardCornerRadius="6dp"
+		card_view:cardElevation="3dp"
+		card_view:cardUseCompatPadding="true">
 
-        <LinearLayout
-            android:paddingTop="8dp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="6dp"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			android:paddingLeft="12dp"
+			android:paddingTop="8dp"
+			android:paddingRight="12dp"
+			android:paddingBottom="6dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:orientation="horizontal"
-                android:layout_height="wrap_content">
-            <TextView
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="#000"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Message"
-                android:id="@+id/message" />
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/playAudio"
-                android:backgroundTint="#80000000"
-                android:elevation="10dp"
-                android:src="@drawable/play"
-                card_view:fabSize="mini"/>
-            <ProgressBar
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/audioProgress"
-                android:layout_marginTop="13dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginEnd="5dp"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_marginRight="5dp" />
-            </LinearLayout>
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="ahliuhifuaawefawefaweflwheiu"
-                    android:id="@+id/status"
-                    android:textColor="#888"/>
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:text="1234-12-12 12:12"
-                    android:id="@+id/time"
-                    android:textColor="#888"/>
-            </LinearLayout>
+				<TextView
+					android:id="@+id/message"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="Message"
+					android:textAppearance="?android:attr/textAppearanceMedium"
+					android:textColor="#000" />
 
-        </LinearLayout>
+				<com.google.android.material.floatingactionbutton.FloatingActionButton
+					android:id="@+id/playAudio"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:backgroundTint="#80000000"
+					android:elevation="10dp"
+					android:src="@drawable/play"
+					card_view:fabSize="mini" />
 
-    </androidx.cardview.widget.CardView>
+				<ProgressBar
+					android:id="@+id/audioProgress"
+					style="?android:attr/progressBarStyleHorizontal"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="5dp"
+					android:layout_marginTop="13dp"
+					android:layout_marginEnd="5dp"
+					android:layout_marginRight="5dp" />
+			</LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/right"
-        android:layout_width="64dp"
-        android:layout_height="match_parent">
-    </FrameLayout>
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="4dp"
+				android:orientation="horizontal">
+
+				<TextView
+					android:id="@+id/status"
+					android:layout_width="0dp"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:singleLine="true"
+					android:text="ahliuhifuaawefawefaweflwheiu"
+					android:textAppearance="?android:attr/textAppearanceSmall"
+					android:textColor="#888" />
+
+				<TextView
+					android:id="@+id/time"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:singleLine="true"
+					android:text="1234-12-12 12:12"
+					android:textAppearance="?android:attr/textAppearanceSmall"
+					android:textColor="#888" />
+			</LinearLayout>
+
+		</LinearLayout>
+
+	</androidx.cardview.widget.CardView>
+
+	<FrameLayout
+		android:id="@+id/right"
+		android:layout_width="64dp"
+		android:layout_height="match_parent"></FrameLayout>
 
 </LinearLayout>
