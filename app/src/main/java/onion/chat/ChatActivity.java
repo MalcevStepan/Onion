@@ -77,6 +77,7 @@ import java.util.TimerTask;
 public class ChatActivity extends AppCompatActivity {
 
 	public static final int RECORD_AUDIO = 0;
+	public static final int READ_EXTERNAL_STORAGE = 5;
 	public static final int GALLERY_SUCCESS = 1;
 	public static final int TAKE_PHOTO_SUCCESS = 2;
 	public static final int CAPTURE_SUCCESS = 3;
@@ -329,9 +330,10 @@ public class ChatActivity extends AppCompatActivity {
 		// CAPTURE VIDEO
 		videoIcon.setOnClickListener(view -> {
 			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-			File video = new File(pathToPhotoAndVideo + "/video.mp4");
-			video.mkdir();
-			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(video));
+			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+						READ_EXTERNAL_STORAGE);
+			else
 			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
