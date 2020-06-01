@@ -382,34 +382,28 @@ public class ChatActivity extends AppCompatActivity {
 						int count = data.getClipData().getItemCount();
 						int currentItem = 0;
 						while (currentItem < count) {
-							Uri imageUri = data.getClipData().getItemAt(currentItem).getUri();
-							try {
-								fis = new FileInputStream(new File(String.valueOf(imageUri)));
-								byte[] buf = new byte[1024];
-								int n;
-								while (-1 != (n = fis.read(buf)))
-									baos.write(buf, 0, n);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-							if (fis == null) {
-								Log.i("PHOTO", "failed to convert photo");
-								break;
-							}
-							db.addPendingOutgoingMessage(sender, address, "photo", baos.toByteArray());
-							sendPendingAndUpdate("gallerey");
+							Bitmap photo = BitmapFactory.decodeFile(data.getClipData().getItemAt(currentItem).getUri().getPath());
+							ByteArrayOutputStream stream = new ByteArrayOutputStream();
+							assert photo != null;
+							photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+							byte[] byteArray = stream.toByteArray();
+							photo.recycle();
+							db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
+							sendPendingAndUpdate("camera");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
 							currentItem = currentItem + 1;
 						}
 					} else if (data.getData() != null) {
 						Toast.makeText(this, "PHOTO CHOOSED", Toast.LENGTH_SHORT).show();
-						try {
-							db.addPendingOutgoingMessage(sender, address, "photo", read(new File(Objects.requireNonNull(data.getData().getPath()))));
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-						sendPendingAndUpdate("photo");
+						Bitmap photo = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
+						ByteArrayOutputStream stream = new ByteArrayOutputStream();
+						assert photo != null;
+						photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+						byte[] byteArray = stream.toByteArray();
+						photo.recycle();
+						db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
+						sendPendingAndUpdate("camera");
 						recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 						rep = 0;
 					}
