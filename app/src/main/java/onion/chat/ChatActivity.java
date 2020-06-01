@@ -424,7 +424,7 @@ public class ChatActivity extends AppCompatActivity {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
 					Log.i("VIDEO_PATH", getRealPathFromURI(data.getData()));
 					try {
-						db.addPendingOutgoingMessage(sender, address, "video", read(new File(data.getData().getPath())));
+						db.addPendingOutgoingMessage(sender, address, "video", read(new File(getRealPathFromURI(data.getData()))));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
