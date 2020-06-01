@@ -422,7 +422,7 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
-					Log.i("VIDEO_PATH", data.getData().getPath());
+					Log.i("VIDEO_PATH", getRealPathFromURI(data.getData()));
 					try {
 						db.addPendingOutgoingMessage(sender, address, "video", read(new File(data.getData().getPath())));
 					} catch (IOException e) {
@@ -455,6 +455,14 @@ public class ChatActivity extends AppCompatActivity {
 		photoIcon.setVisibility(View.GONE);
 		videoIcon.setVisibility(View.GONE);
 		galleryIcon.setVisibility(View.GONE);
+	}
+
+	public String getRealPathFromURI(Uri contentUri) {
+		String[] proj = {MediaStore.Audio.Media.DATA};
+		Cursor cursor = managedQuery(contentUri, proj, null, null, null);
+		int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+		cursor.moveToFirst();
+		return cursor.getString(column_index);
 	}
 
 	public byte[] read(File file) throws IOException {
