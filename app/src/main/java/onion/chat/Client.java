@@ -143,26 +143,31 @@ public class Client {
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
-				if (type.equals("msg")) {
-					if (sendMsg(sock, receiver, new String(content))) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message " + type + " sent");
-					}
-				} else if (type.equals("photo")) {
-					if (sendImage(sock, receiver, content)) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message " + type + " sent");
-					}
-				} else if (type.equals("audio")) {
-					if (sendAudio(sock, receiver, content)) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message " + type + " sent");
-					}
-				} else if (type.equals("video")) {
-					if (sendVideo(sock, receiver, content)) {
-						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message " + type + " sent");
-					}
+				switch (type) {
+					case "msg":
+						if (sendMsg(sock, receiver, new String(content))) {
+							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+							log("message " + type + " sent");
+						}
+						break;
+					case "photo":
+						if (sendImage(sock, receiver, content)) {
+							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+							log("message " + type + " sent");
+						}
+						break;
+					case "audio":
+						if (sendAudio(sock, receiver, content)) {
+							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+							log("message " + type + " sent");
+						}
+						break;
+					case "video":
+						if (sendVideo(sock, receiver, content)) {
+							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+							log("message " + type + " sent");
+						}
+						break;
 				}
 			}
 			sock.close();
