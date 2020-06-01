@@ -815,9 +815,11 @@ public class ChatActivity extends AppCompatActivity {
 			((ChatHolder) holder).status.setTextColor(color);
 
 			String path = new String(content);
+			boolean self = path.split("/")[1].equals(sender);
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
+				path = self ? pathToPhotoAndVideo + path : path;
 				File receivedVideo = new File(path);
 				Log.i("PATH_TO_VIDEO", receivedVideo.getPath());
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
@@ -826,11 +828,13 @@ public class ChatActivity extends AppCompatActivity {
 				mediaController.setMediaPlayer(((VideoHolder) holder).video);
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				Log.i("RECEIVED_PHOTO", pathToPhotoAndVideo + path);
-				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(pathToPhotoAndVideo + path));
+				path = self ? pathToPhotoAndVideo + path : path;
+				Log.i("RECEIVED_PHOTO", path);
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(path));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				File receivedAudio = new File(pathToAudio + path);
+				path = self ? pathToAudio + path : path;
+				File receivedAudio = new File(path);
 				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
 					/*	 if (mediaPlayer == null) {*/
