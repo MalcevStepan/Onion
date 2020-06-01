@@ -373,16 +373,18 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		FileInputStream fis = null;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		switch (requestCode) {
 			case GALLERY_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					if (data.getClipData() != null) {
 						int count = data.getClipData().getItemCount();
-						int currentItem = 0;
-						while (currentItem < count) {
-							Bitmap photo = BitmapFactory.decodeFile(data.getClipData().getItemAt(currentItem).getUri().getPath());
+						for(int currentItem = 0;currentItem<count;currentItem++){
+							Bitmap photo = null;
+							try {
+								photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 							ByteArrayOutputStream stream = new ByteArrayOutputStream();
 							assert photo != null;
 							photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -392,11 +394,15 @@ public class ChatActivity extends AppCompatActivity {
 							sendPendingAndUpdate("camera");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
-							currentItem = currentItem + 1;
 						}
 					} else if (data.getData() != null) {
 						Toast.makeText(this, "PHOTO CHOOSED", Toast.LENGTH_SHORT).show();
-						Bitmap photo = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
+						Bitmap photo = null;
+						try {
+							photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 						ByteArrayOutputStream stream = new ByteArrayOutputStream();
 						assert photo != null;
 						photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
