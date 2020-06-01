@@ -219,7 +219,6 @@ public class Server {
 							case 4:
 								new File(ChatActivity.pathToAudio + "/" + senderName).mkdir();
 								File audio = new File(ChatActivity.pathToAudio + "/" + senderName + "/received" + time + ".3gpp");
-								audio.mkdirs();
 								out = new FileOutputStream(audio);
 								out.write(result);
 								out.flush();
