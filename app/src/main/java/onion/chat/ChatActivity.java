@@ -378,7 +378,7 @@ public class ChatActivity extends AppCompatActivity {
 				if (resultCode == RESULT_OK) {
 					if (data.getClipData() != null) {
 						int count = data.getClipData().getItemCount();
-						for(int currentItem = 0;currentItem<count;currentItem++){
+						for (int currentItem = 0; currentItem < count; currentItem++) {
 							Bitmap photo = null;
 							try {
 								photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getClipData().getItemAt(currentItem).getUri());
@@ -418,6 +418,7 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
+					Log.i("VIDEO_PATH", Objects.requireNonNull(Objects.requireNonNull(data.getData()).getPath()));
 					try {
 						db.addPendingOutgoingMessage(sender, address, "video", read(new File(Objects.requireNonNull(Objects.requireNonNull(data.getData()).getPath()))));
 					} catch (IOException e) {
@@ -452,8 +453,8 @@ public class ChatActivity extends AppCompatActivity {
 		galleryIcon.setVisibility(View.GONE);
 	}
 
-	public byte[] read(File file) throws IOException{
-		if (file.length() > MAX_FILE_SIZE)return null;
+	public byte[] read(File file) throws IOException {
+		if (file.length() > MAX_FILE_SIZE) return null;
 
 		byte[] buffer = new byte[(int) file.length()];
 		try (InputStream ios = new FileInputStream(file)) {
@@ -464,6 +465,7 @@ public class ChatActivity extends AppCompatActivity {
 		}
 		return buffer;
 	}
+
 	public void recordStart() {
 		try {
 			releaseRecorder();
@@ -659,11 +661,13 @@ public class ChatActivity extends AppCompatActivity {
 	static class AudioHolder extends ChatHolder {
 		private FloatingActionButton fab;
 		private ProgressBar progress;
+		private TextView time;
 
 		public AudioHolder(View v) {
 			super(v);
 			fab = v.findViewById(R.id.playAudio);
 			progress = v.findViewById(R.id.audioProgress);
+			time = v.findViewById(R.id.audioTime);
 		}
 	}
 
@@ -712,6 +716,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}
 
+		@SuppressLint("SetTextI18n")
 		@Override
 		public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 			if (cursor == null) return;
@@ -771,8 +776,8 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-				File receivedVideo = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".3gp");
-				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".3gp");
+				File receivedVideo = new File(pathToPhotoAndVideo + "/received" + time + ".3gp");
+				Log.i("PATH_TO_VIDEO", pathToPhotoAndVideo + "/received" + time + ".3gp");
 				try {
 					FileOutputStream out = new FileOutputStream(receivedVideo);
 					out.write(content);
@@ -784,8 +789,8 @@ public class ChatActivity extends AppCompatActivity {
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
-				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
+				/*File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time + ".jpeg");
+				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time + ".jpeg");
 				try {
 					FileOutputStream out = new FileOutputStream(receivedPhoto);
 					out.write(content);
@@ -793,11 +798,11 @@ public class ChatActivity extends AppCompatActivity {
 					out.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
-				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
+				}*/
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeByteArray(content, 0, content.length));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				File receivedAudio = new File(pathToAudio + "/received" + time + ".3gpp");
+				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(":", "_") + ".3gpp");
 				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
 				try {
 					FileOutputStream out = new FileOutputStream(receivedAudio);
@@ -807,7 +812,11 @@ public class ChatActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				((AudioHolder) holder).fab.setOnClickListener(view -> playStart(receivedAudio.getPath()));
+				releasePlayer();
+				((AudioHolder) holder).fab.setOnClickListener(view -> {
+					((AudioHolder)holder).progress.setProgress(mediaPlayer.getCurrentPosition());
+					playStart(receivedAudio.getPath());
+				});
 			} else {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
