@@ -185,7 +185,11 @@ public class Server {
 								Log.e("TEST", new String(result));
 								break;
 							case 2:
-								//Client.getInstance(context).startSendPendingMessages(senderName);
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "video", result, System.currentTimeMillis());
+								if (listener != null) listener.onChange();
+								if (db.hasContact(senderName))
+									Notifier.getInstance(context).onMessage();
+								Log.e("TEST", "take video");
 								break;
 							case 3:
 								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());

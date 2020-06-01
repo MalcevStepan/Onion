@@ -190,6 +190,40 @@ public class Sock {
 		}
 	}
 
+	public boolean writeAudio(String sender, byte[] audio) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{4});
+			else
+				return false;
+			if (writeBytes(sender, audio)) {
+				flush();
+				return true;
+			} else
+				return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public boolean writeVideo(String sender, byte[] video) {
+		try {
+			if (writer != null)
+				writer.write(new byte[]{2});
+			else
+				return false;
+			if (writeBytes(sender, video)) {
+				flush();
+				return true;
+			} else
+				return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public boolean writeImage(String sender, byte[] image) {
 		try {
 			if (writer != null)

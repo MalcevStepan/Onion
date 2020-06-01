@@ -64,6 +64,28 @@ public class Client {
 		return sock.writeMessage(sender, content);
 	}
 
+	private boolean sendAudio(Sock sock, String receiver, byte[] audio) {
+		if (sock.isClosed()) {
+			return false;
+		}
+
+		String sender = tor.getID();
+		if (receiver.equals(sender)) return false;
+
+		return sock.writeAudio(sender, audio);
+
+	}
+	private boolean sendVideo(Sock sock, String receiver, byte[] video) {
+		if (sock.isClosed()) {
+			return false;
+		}
+
+		String sender = tor.getID();
+		if (receiver.equals(sender)) return false;
+
+		return sock.writeVideo(sender, video);
+
+	}
 	private boolean sendImage(Sock sock, String receiver, byte[] photo) {
 		if (sock.isClosed()) {
 			return false;
@@ -124,12 +146,22 @@ public class Client {
 				if (type.equals("msg")) {
 					if (sendMsg(sock, receiver, new String(content))) {
 						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message sent");
+						log("message " + type + " sent");
 					}
 				} else if (type.equals("photo")) {
 					if (sendImage(sock, receiver, content)) {
 						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
-						log("message photo sent");
+						log("message " + type + " sent");
+					}
+				} else if (type.equals("audio")) {
+					if (sendAudio(sock, receiver, content)) {
+						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						log("message " + type + " sent");
+					}
+				} else if (type.equals("video")) {
+					if (sendVideo(sock, receiver, content)) {
+						db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						log("message " + type + " sent");
 					}
 				}
 			}
