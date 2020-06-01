@@ -167,19 +167,19 @@ public class Client {
 						}
 						break;
 					case "photo":
-						if (sendImage(sock, receiver, read(new File(path)))) {
+						if (sendImage(sock, receiver, read(new File(ChatActivity.pathToPhotoAndVideo + path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}
 						break;
 					case "audio":
-						if (sendAudio(sock, receiver, read(new File(path)))) {
+						if (sendAudio(sock, receiver, read(new File(ChatActivity.pathToAudio + path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}
 						break;
 					case "video":
-						if (sendVideo(sock, receiver, read(new File(path)))) {
+						if (sendVideo(sock, receiver, read(new File(ChatActivity.pathToPhotoAndVideo + path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}

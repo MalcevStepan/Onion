@@ -49,6 +49,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -399,7 +400,7 @@ public class ChatActivity extends AppCompatActivity {
 							byte[] byteArray = stream.toByteArray();
 							photo.recycle();
 							String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
-							File photoFile = new File(pathToAudio + photoName);
+							File photoFile = new File(pathToPhotoAndVideo + photoName);
 							FileOutputStream out;
 							try {
 								out = new FileOutputStream(photoFile);
@@ -428,7 +429,7 @@ public class ChatActivity extends AppCompatActivity {
 						byte[] byteArray = stream.toByteArray();
 						photo.recycle();
 						String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
-						File photoFile = new File(pathToAudio + photoName);
+						File photoFile = new File(pathToPhotoAndVideo + photoName);
 						FileOutputStream out;
 						try {
 							out = new FileOutputStream(photoFile);
@@ -451,7 +452,7 @@ public class ChatActivity extends AppCompatActivity {
 					String path = getRealPathFromURI(data.getData());
 					Log.i("VIDEO_PATH", path);
 					File video = new File(path);
-					db.addPendingOutgoingMessage(sender, address, "video", path.getBytes());
+					db.addPendingOutgoingMessage(sender, address, "video", (path).getBytes());
 					Log.i("VIDEO_SIZE", video.length() / 1024 + "kb");
 					sendPendingAndUpdate("video");
 					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
@@ -468,7 +469,7 @@ public class ChatActivity extends AppCompatActivity {
 					byte[] byteArray = stream.toByteArray();
 					photo.recycle();
 					String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
-					File photoFile = new File(pathToAudio + photoName);
+					File photoFile = new File(pathToPhotoAndVideo + photoName);
 					FileOutputStream out;
 					try {
 						out = new FileOutputStream(photoFile);
@@ -817,15 +818,18 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-				File receivedVideo = new File(path.replaceAll(":", "_"));
+				File receivedVideo = new File(pathToPhotoAndVideo + path);
 				Log.i("PATH_TO_VIDEO", receivedVideo.getPath());
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
+				MediaController mediaController = new MediaController(holder.itemView.getContext());
+				((VideoHolder) holder).video.setMediaController(mediaController);
+				mediaController.setMediaPlayer(((VideoHolder) holder).video);
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(path));
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(pathToPhotoAndVideo + path));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				File receivedAudio = new File(path.replaceAll(":", "_"));
+				File receivedAudio = new File(pathToAudio + path);
 				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
 					/*	 if (mediaPlayer == null) {*/
