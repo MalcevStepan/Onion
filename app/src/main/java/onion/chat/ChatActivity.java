@@ -17,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -812,10 +813,21 @@ public class ChatActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				releasePlayer();
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
-					((AudioHolder)holder).progress.setProgress(mediaPlayer.getCurrentPosition());
-					playStart(receivedAudio.getPath());
+					 if (mediaPlayer == null) {
+						((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
+						playStart(receivedAudio.getPath());
+						 ((AudioHolder) holder).progress.setProgress(mediaPlayer.getCurrentPosition());
+						 mediaPlayer.setOnCompletionListener(mediaPlayer -> {
+							 ((AudioHolder) holder).fab.setImageResource(R.drawable.play);
+						 });
+					}if (mediaPlayer.isPlaying()) {
+						((AudioHolder) holder).fab.setImageResource(R.drawable.play);
+						mediaPlayer.pause();
+					} else {
+						((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
+						mediaPlayer.start();
+					}
 				});
 			} else {
 				Log.i("CONTENT", "content");

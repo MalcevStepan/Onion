@@ -70,11 +70,10 @@ public class Database extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// adding new column if oldVersion is older
-		/*if (newVersion > oldVersion) {
-			db.execSQL("ALTER TABLE messages ADD COLUMN audioContent TEXT");
-			db.execSQL("ALTER TABLE messages ADD COLUMN videoContent TEXT");
-			db.execSQL("ALTER TABLE messages ADD COLUMN photoContent TEXT");
-		}*/
+		if (newVersion > oldVersion) {
+			db.execSQL("DROP TABLE content");
+			db.execSQL("ALTER TABLE messages ADD COLUMN content BLOB");
+		}
 	}
 
 
