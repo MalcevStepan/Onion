@@ -771,7 +771,17 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-
+				File receivedVideo = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".3gp");
+				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".3gp");
+				try {
+					FileOutputStream out = new FileOutputStream(receivedVideo);
+					out.write(content);
+					out.flush();
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
 				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time.replaceAll(" ", "_") + ".jpeg");
@@ -788,7 +798,7 @@ public class ChatActivity extends AppCompatActivity {
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
 				File receivedAudio = new File(pathToAudio + "/received" + time + ".3gpp");
-				Log.i("PATH_TO_AUDIO", pathToAudio + "/received" + time + ".3gpp");
+				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
 				try {
 					FileOutputStream out = new FileOutputStream(receivedAudio);
 					out.write(content);
@@ -797,7 +807,7 @@ public class ChatActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				((AudioHolder) holder).fab.setOnClickListener(view -> playStart(pathToAudio + "/received" + time + ".3gpp"));
+				((AudioHolder) holder).fab.setOnClickListener(view -> playStart(receivedAudio.getPath()));
 			} else {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
