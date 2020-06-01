@@ -190,8 +190,8 @@ public class Server {
 								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 5:
+								new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
 								File video = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/video" + time + ".mp4");
-								video.mkdirs();
 								out = new FileOutputStream(video);
 								out.write(result);
 								out.flush();
@@ -204,8 +204,8 @@ public class Server {
 								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 3:
+								new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
 								File photo = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/photo" + time + ".jpeg");
-								photo.mkdirs();
 								out = new FileOutputStream(photo);
 								out.write(result);
 								out.flush();
@@ -217,6 +217,7 @@ public class Server {
 								Log.e("TEST", "take photo");
 								break;
 							case 4:
+								new File(ChatActivity.pathToAudio + "/" + senderName).mkdir();
 								File audio = new File(ChatActivity.pathToAudio + "/" + senderName + "/received" + time + ".3gpp");
 								audio.mkdirs();
 								out = new FileOutputStream(audio);
