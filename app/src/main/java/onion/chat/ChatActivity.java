@@ -381,7 +381,7 @@ public class ChatActivity extends AppCompatActivity {
 						for(int currentItem = 0;currentItem<count;currentItem++){
 							Bitmap photo = null;
 							try {
-								photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+								photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getClipData().getItemAt(currentItem).getUri());
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
