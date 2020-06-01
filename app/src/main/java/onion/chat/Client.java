@@ -14,6 +14,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -86,7 +90,7 @@ public class Client {
 		return sock.writeVideo(sender, video);
 
 	}
-	private boolean sendImage(Sock sock, String receiver, byte[] photo) {
+	private boolean sendImage(Sock sock, String receiver, byte[] image) {
 		if (sock.isClosed()) {
 			return false;
 		}
@@ -94,7 +98,7 @@ public class Client {
 		String sender = tor.getID();
 		if (receiver.equals(sender)) return false;
 
-		return sock.writeImage(sender, photo);
+		return sock.writeImage(sender, image);
 
 	}
 
@@ -118,7 +122,7 @@ public class Client {
 		cur.close();
 	}
 
-	public void doSendAllPendingMessages() {
+	public void doSendAllPendingMessages() throws IOException {
 		log("start send all pending messages");
 		log("do send all pending messages");
 		Database db = Database.getInstance(context);
@@ -131,7 +135,18 @@ public class Client {
 		cur.close();
 	}
 
-	private void doSendPendingMessages(String address) {
+	public byte[] read(File file) throws IOException {
+		byte[] buffer = new byte[(int) file.length()];
+		try (InputStream ios = new FileInputStream(file)) {
+			if (ios.read(buffer) == -1) {
+				throw new IOException(
+						"EOF reached while trying to read the whole file");
+			}
+		}
+		return buffer;
+	}
+
+	private void doSendPendingMessages(String address) throws IOException {
 		log("do send pending messages");
 		Database db = Database.getInstance(context);
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
@@ -143,6 +158,7 @@ public class Client {
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
+				String path = new String(content);
 				switch (type) {
 					case "msg":
 						if (sendMsg(sock, receiver, new String(content))) {
@@ -151,19 +167,19 @@ public class Client {
 						}
 						break;
 					case "photo":
-						if (sendImage(sock, receiver, content)) {
+						if (sendImage(sock, receiver, read(new File(path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}
 						break;
 					case "audio":
-						if (sendAudio(sock, receiver, content)) {
+						if (sendAudio(sock, receiver, read(new File(path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}
 						break;
 					case "video":
-						if (sendVideo(sock, receiver, content)) {
+						if (sendVideo(sock, receiver, read(new File(path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}
@@ -177,7 +193,13 @@ public class Client {
 
 	public synchronized void startSendPendingMessages(final String address) {
 		log("start send pending messages");
-		start(() -> doSendPendingMessages(address));
+		start(() -> {
+			try {
+				doSendPendingMessages(address);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	boolean isBusy() {

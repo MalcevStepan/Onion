@@ -81,12 +81,11 @@ public class ChatActivity extends AppCompatActivity {
 	public static final int GALLERY_SUCCESS = 1;
 	public static final int TAKE_PHOTO_SUCCESS = 2;
 	public static final int CAPTURE_SUCCESS = 3;
-	public static final long MAX_FILE_SIZE = 16000000;
 
 	private MediaRecorder mediaRecorder;
 	private MediaPlayer mediaPlayer;
-	private String pathToAudio;
-	private String pathToPhotoAndVideo;
+	static String pathToAudio;
+	static String pathToPhotoAndVideo;
 	ChatAdapter adapter;
 	RecyclerView recycler;
 	ImageView videoIcon, microIcon, photoIcon, sendIcon, galleryIcon;
@@ -178,13 +177,15 @@ public class ChatActivity extends AppCompatActivity {
 
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
+		sender = tor.getID();
+
 
 		pathToAudio = this.getCacheDir().getPath() + "/Media/Audio";
 		pathToPhotoAndVideo = this.getCacheDir().getPath() + "/Media/Video";
-		new File(pathToAudio).mkdirs();
-		new File(pathToPhotoAndVideo).mkdir();
+		new File(pathToAudio + "/" + sender).mkdirs();
+		new File(pathToPhotoAndVideo + "/" + sender).mkdirs();
 
-		sender = tor.getID();
+
 		sendIcon = findViewById(R.id.send);
 		edit = findViewById(R.id.editmessage);
 		noMessages = findViewById(R.id.noMessages);
@@ -220,7 +221,7 @@ public class ChatActivity extends AppCompatActivity {
 		// SENDING MESSAGE
 		sendIcon.setOnClickListener(view -> {
 			if (sender == null || sender.trim().equals("")) {
-				sendPendingAndUpdate("sendIcon");
+				sendPendingAndUpdate("sendMessage");
 				return;
 			}
 
@@ -232,7 +233,7 @@ public class ChatActivity extends AppCompatActivity {
 
 			edit.setText("");
 
-			sendPendingAndUpdate("sendIcon");
+			sendPendingAndUpdate("sendMessage");
 
 			//recycler.scrollToPosition(cursor.getCount() - 1);
 
@@ -251,7 +252,7 @@ public class ChatActivity extends AppCompatActivity {
 				switch (motionEvent.getActionMasked()) {
 					case MotionEvent.ACTION_DOWN:
 						pressTime = System.currentTimeMillis();
-						recordStart();
+						recordStart(pressTime);
 						redCircle.setVisibility(View.VISIBLE);
 						redCircle.startAnimation(redCircleAnim);
 						edit.setVisibility(View.INVISIBLE);
@@ -270,7 +271,8 @@ public class ChatActivity extends AppCompatActivity {
 								sendPendingAndUpdate("audio 1");
 								break;
 							}
-							File audio = new File(pathToAudio + "/record.3gpp");
+							String fileName = "/" + sender + "/record" + pressTime + ".3gpp";
+							File audio = new File(pathToAudio + fileName);
 							byte[] data = new byte[(int) audio.length()];
 							FileInputStream in;
 							try {
@@ -280,7 +282,7 @@ public class ChatActivity extends AppCompatActivity {
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
-							db.addPendingOutgoingMessage(sender, address, "audio", data);
+							db.addPendingOutgoingMessage(sender, address, "audio", fileName.getBytes());
 							sendPendingAndUpdate("audio 2");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -334,7 +336,7 @@ public class ChatActivity extends AppCompatActivity {
 				ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
 						READ_EXTERNAL_STORAGE);
 			else
-			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
+				startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
 		// OPEN GALLERY
@@ -396,7 +398,18 @@ public class ChatActivity extends AppCompatActivity {
 							photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 							byte[] byteArray = stream.toByteArray();
 							photo.recycle();
-							db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
+							String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
+							File photoFile = new File(pathToAudio + photoName);
+							FileOutputStream out;
+							try {
+								out = new FileOutputStream(photoFile);
+								out.write(byteArray);
+								out.flush();
+								out.close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							db.addPendingOutgoingMessage(sender, address, "photo", photoName.getBytes());
 							sendPendingAndUpdate("camera");
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
@@ -414,7 +427,18 @@ public class ChatActivity extends AppCompatActivity {
 						photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 						byte[] byteArray = stream.toByteArray();
 						photo.recycle();
-						db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
+						String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
+						File photoFile = new File(pathToAudio + photoName);
+						FileOutputStream out;
+						try {
+							out = new FileOutputStream(photoFile);
+							out.write(byteArray);
+							out.flush();
+							out.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						db.addPendingOutgoingMessage(sender, address, "photo", photoName.getBytes());
 						sendPendingAndUpdate("camera");
 						recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 						rep = 0;
@@ -424,12 +448,11 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
-					Log.i("VIDEO_PATH", getRealPathFromURI(data.getData()));
-					try {
-						db.addPendingOutgoingMessage(sender, address, "video", read(new File(getRealPathFromURI(data.getData()))));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					String path = getRealPathFromURI(data.getData());
+					Log.i("VIDEO_PATH", path);
+					File video = new File(path);
+					db.addPendingOutgoingMessage(sender, address, "video", path.getBytes());
+					Log.i("VIDEO_SIZE", video.length() / 1024 + "kb");
 					sendPendingAndUpdate("video");
 					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 					rep = 0;
@@ -444,7 +467,19 @@ public class ChatActivity extends AppCompatActivity {
 					photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 					byte[] byteArray = stream.toByteArray();
 					photo.recycle();
-					db.addPendingOutgoingMessage(sender, address, "photo", byteArray);
+					String photoName = "/" + sender + "/" + "photo" + System.currentTimeMillis() + ".jpeg";
+					File photoFile = new File(pathToAudio + photoName);
+					FileOutputStream out;
+					try {
+						out = new FileOutputStream(photoFile);
+						out.write(byteArray);
+						out.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					db.addPendingOutgoingMessage(sender, address, "photo", photoName.getBytes());
+					Log.i("PHOTO_SIZE", byteArray.length / 1024 + "kb");
 					sendPendingAndUpdate("camera");
 					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 					rep = 0;
@@ -461,9 +496,10 @@ public class ChatActivity extends AppCompatActivity {
 
 	public String getRealPathFromURI(Uri contentUri) {
 		String res = null;
-		String[] proj = { MediaStore.Images.Media.DATA };
+		String[] proj = {MediaStore.Images.Media.DATA};
 		Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-		if(cursor.moveToFirst()){;
+		if (cursor.moveToFirst()) {
+			;
 			int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 			res = cursor.getString(column_index);
 		}
@@ -471,24 +507,11 @@ public class ChatActivity extends AppCompatActivity {
 		return res;
 	}
 
-	public byte[] read(File file) throws IOException {
-		if (file.length() > MAX_FILE_SIZE) return null;
-
-		byte[] buffer = new byte[(int) file.length()];
-		try (InputStream ios = new FileInputStream(file)) {
-			if (ios.read(buffer) == -1) {
-				throw new IOException(
-						"EOF reached while trying to read the whole file");
-			}
-		}
-		return buffer;
-	}
-
-	public void recordStart() {
+	public void recordStart(long pressTime) {
 		try {
 			releaseRecorder();
 			Log.i("AUDIO", "released");
-			File record = new File(pathToAudio + "/record.3gpp");
+			File record = new File(pathToAudio + "/" + sender + "/record" + pressTime + ".3gpp");
 			Log.i("AUDIO", "createdFile");
 			if (record.exists())
 				record.delete();
@@ -790,36 +813,20 @@ public class ChatActivity extends AppCompatActivity {
 			((ChatHolder) holder).time.setTextColor(color);
 			((ChatHolder) holder).status.setTextColor(color);
 
-
+			String path = new String(content);
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-				File receivedVideo = new File(pathToPhotoAndVideo + "/received" + time + ".3gp");
-				Log.i("PATH_TO_VIDEO", pathToPhotoAndVideo + "/received" + time + ".3gp");
-				try {
-					FileOutputStream out = new FileOutputStream(receivedVideo);
-					out.write(content);
-					out.flush();
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				File receivedVideo = new File(path.replaceAll(":", "_"));
+				Log.i("PATH_TO_VIDEO", receivedVideo.getPath());
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeByteArray(content, 0, content.length));
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(path));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(":", "_") + ".3gpp");
+				File receivedAudio = new File(path.replaceAll(":", "_"));
 				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
-				try {
-					FileOutputStream out = new FileOutputStream(receivedAudio);
-					out.write(content);
-					out.flush();
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
 					/*	 if (mediaPlayer == null) {*/
 					((AudioHolder) holder).fab.setImageResource(R.drawable.pause);

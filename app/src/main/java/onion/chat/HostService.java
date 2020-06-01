@@ -19,6 +19,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -73,7 +74,11 @@ public class HostService extends Service {
             public void run() {
                 log("update");
                 client.doSendPendingFriends();
-                client.doSendAllPendingMessages();
+                try {
+                    client.doSendAllPendingMessages();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }, 0, 1000 * 60 * 60);
 

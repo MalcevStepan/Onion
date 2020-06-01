@@ -17,6 +17,7 @@ import android.net.LocalSocketAddress;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -167,7 +168,8 @@ public class Server {
 						}
 
 						Database db = Database.getInstance(context);
-
+						FileOutputStream out;
+						long time = System.currentTimeMillis();
 						switch (info[0]) {
 							case 0:
 								String name = new String(result).trim();
@@ -188,7 +190,13 @@ public class Server {
 								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 5:
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "video", result, System.currentTimeMillis());
+								File video = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/video" + time + ".mp4");
+								video.mkdirs();
+								out = new FileOutputStream(video);
+								out.write(result);
+								out.flush();
+								out.close();
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "video", video.getPath().getBytes(), System.currentTimeMillis());
 								if (listener != null) listener.onChange();
 								if (db.hasContact(senderName))
 									Notifier.getInstance(context).onMessage();
@@ -196,14 +204,26 @@ public class Server {
 								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 3:
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());
+								File photo = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/photo" + time + ".jpeg");
+								photo.mkdirs();
+								out = new FileOutputStream(photo);
+								out.write(result);
+								out.flush();
+								out.close();
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", photo.getPath().getBytes(), System.currentTimeMillis());
 								if (listener != null) listener.onChange();
 								if (db.hasContact(senderName))
 									Notifier.getInstance(context).onMessage();
 								Log.e("TEST", "take photo");
 								break;
 							case 4:
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", result, System.currentTimeMillis());
+								File audio = new File(ChatActivity.pathToAudio + "/" + senderName + "/received" + time + ".3gpp");
+								audio.mkdirs();
+								out = new FileOutputStream(audio);
+								out.write(result);
+								out.flush();
+								out.close();
+								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", audio.getPath().getBytes(), System.currentTimeMillis());
 								if (listener != null) listener.onChange();
 								if (db.hasContact(senderName))
 									Notifier.getInstance(context).onMessage();
