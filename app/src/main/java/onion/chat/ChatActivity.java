@@ -458,11 +458,15 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	public String getRealPathFromURI(Uri contentUri) {
-		String[] proj = {MediaStore.Audio.Media.DATA};
-		Cursor cursor = managedQuery(contentUri, proj, null, null, null);
-		int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
-		cursor.moveToFirst();
-		return cursor.getString(column_index);
+		String res = null;
+		String[] proj = { MediaStore.Images.Media.DATA };
+		Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+		if(cursor.moveToFirst()){;
+			int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+			res = cursor.getString(column_index);
+		}
+		cursor.close();
+		return res;
 	}
 
 	public byte[] read(File file) throws IOException {
