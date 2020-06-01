@@ -815,7 +815,7 @@ public class ChatActivity extends AppCompatActivity {
 			((ChatHolder) holder).status.setTextColor(color);
 
 			String path = new String(content);
-			boolean self = path.split("/")[1].equals(sender);
+			boolean self = path.split("/").length <= 3;
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
