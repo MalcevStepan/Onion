@@ -329,7 +329,9 @@ public class ChatActivity extends AppCompatActivity {
 		// CAPTURE VIDEO
 		videoIcon.setOnClickListener(view -> {
 			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(pathToPhotoAndVideo + "/video.mp4"));
+			File video = new File(pathToPhotoAndVideo + "/video.mp4");
+			video.mkdir();
+			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(video));
 			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
