@@ -190,6 +190,7 @@ public class Server {
 								if (db.hasContact(senderName))
 									Notifier.getInstance(context).onMessage();
 								Log.e("TEST", "take video");
+								Client.getInstance(context).startSendPendingMessages(senderName);
 								break;
 							case 3:
 								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", result, System.currentTimeMillis());
