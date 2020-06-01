@@ -789,7 +789,7 @@ public class ChatActivity extends AppCompatActivity {
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time + ".jpeg");
+				/*File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time + ".jpeg");
 				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time + ".jpeg");
 				try {
 					FileOutputStream out = new FileOutputStream(receivedPhoto);
@@ -798,11 +798,11 @@ public class ChatActivity extends AppCompatActivity {
 					out.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-				}
-				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(receivedPhoto.getPath()));
+				}*/
+				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeByteArray(content, 0, content.length));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
-				File receivedAudio = new File(pathToAudio + "/received" + time + ".3gpp");
+				File receivedAudio = new File(pathToAudio + "/received" + time.replaceAll(":", "_") + ".3gpp");
 				Log.i("PATH_TO_AUDIO", receivedAudio.getPath());
 				try {
 					FileOutputStream out = new FileOutputStream(receivedAudio);
