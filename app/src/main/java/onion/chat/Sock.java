@@ -210,7 +210,7 @@ public class Sock {
 	public boolean writeVideo(String sender, byte[] video) {
 		try {
 			if (writer != null)
-				writer.write(new byte[]{2});
+				writer.write(new byte[]{5});
 			else
 				return false;
 			if (writeBytes(sender, video)) {
