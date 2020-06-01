@@ -329,7 +329,7 @@ public class ChatActivity extends AppCompatActivity {
 		// CAPTURE VIDEO
 		videoIcon.setOnClickListener(view -> {
 			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, pathToPhotoAndVideo + "/video.3gp");
+			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(pathToPhotoAndVideo + "/video.mp4"));
 			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
@@ -420,9 +420,9 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
-					Log.i("VIDEO_PATH", pathToPhotoAndVideo + "/video.3gp");
+					Log.i("VIDEO_PATH", data.getData().getPath());
 					try {
-						db.addPendingOutgoingMessage(sender, address, "video", read(new File(pathToPhotoAndVideo + "video.3gp")));
+						db.addPendingOutgoingMessage(sender, address, "video", read(new File(data.getData().getPath())));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -805,13 +805,13 @@ public class ChatActivity extends AppCompatActivity {
 					e.printStackTrace();
 				}
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
-				/*	 if (mediaPlayer == null) {*/
-						((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
-						playStart(receivedAudio.getPath());
-						 ((AudioHolder) holder).progress.setProgress(mediaPlayer.getCurrentPosition());
-						 mediaPlayer.setOnCompletionListener(mediaPlayer -> {
-							 ((AudioHolder) holder).fab.setImageResource(R.drawable.play);
-						 });
+					/*	 if (mediaPlayer == null) {*/
+					((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
+					playStart(receivedAudio.getPath());
+					((AudioHolder) holder).progress.setProgress(mediaPlayer.getCurrentPosition());
+					mediaPlayer.setOnCompletionListener(mediaPlayer -> {
+						((AudioHolder) holder).fab.setImageResource(R.drawable.play);
+					});
 					/*if (mediaPlayer.isPlaying()) {
 						((AudioHolder) holder).fab.setImageResource(R.drawable.play);
 						mediaPlayer.pause();
