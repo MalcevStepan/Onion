@@ -329,6 +329,7 @@ public class ChatActivity extends AppCompatActivity {
 		// CAPTURE VIDEO
 		videoIcon.setOnClickListener(view -> {
 			Intent captureVideo = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+			captureVideo.putExtra(MediaStore.EXTRA_OUTPUT, pathToPhotoAndVideo + "/video.3gp");
 			startActivityForResult(captureVideo, CAPTURE_SUCCESS);
 		});
 
@@ -419,9 +420,9 @@ public class ChatActivity extends AppCompatActivity {
 			case CAPTURE_SUCCESS:
 				if (resultCode == RESULT_OK) {
 					Toast.makeText(this, "Video captured", Toast.LENGTH_SHORT).show();
-					Log.i("VIDEO_PATH", Objects.requireNonNull(Objects.requireNonNull(data.getData()).getPath()));
+					Log.i("VIDEO_PATH", pathToPhotoAndVideo + "/video.3gp");
 					try {
-						db.addPendingOutgoingMessage(sender, address, "video", read(new File(Objects.requireNonNull(Objects.requireNonNull(data.getData()).getPath()))));
+						db.addPendingOutgoingMessage(sender, address, "video", read(new File(pathToPhotoAndVideo + "video.3gp")));
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -790,16 +791,6 @@ public class ChatActivity extends AppCompatActivity {
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
-				/*File receivedPhoto = new File(pathToPhotoAndVideo + "/received" + time + ".jpeg");
-				Log.i("PATH_TO_PHOTO", pathToPhotoAndVideo + "/received" + time + ".jpeg");
-				try {
-					FileOutputStream out = new FileOutputStream(receivedPhoto);
-					out.write(content);
-					out.flush();
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}*/
 				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeByteArray(content, 0, content.length));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
@@ -814,20 +805,20 @@ public class ChatActivity extends AppCompatActivity {
 					e.printStackTrace();
 				}
 				((AudioHolder) holder).fab.setOnClickListener(view -> {
-					 if (mediaPlayer == null) {
+				/*	 if (mediaPlayer == null) {*/
 						((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
 						playStart(receivedAudio.getPath());
 						 ((AudioHolder) holder).progress.setProgress(mediaPlayer.getCurrentPosition());
 						 mediaPlayer.setOnCompletionListener(mediaPlayer -> {
 							 ((AudioHolder) holder).fab.setImageResource(R.drawable.play);
 						 });
-					}if (mediaPlayer.isPlaying()) {
+					/*if (mediaPlayer.isPlaying()) {
 						((AudioHolder) holder).fab.setImageResource(R.drawable.play);
 						mediaPlayer.pause();
 					} else {
 						((AudioHolder) holder).fab.setImageResource(R.drawable.pause);
 						mediaPlayer.start();
-					}
+					}*/
 				});
 			} else {
 				Log.i("CONTENT", "content");
