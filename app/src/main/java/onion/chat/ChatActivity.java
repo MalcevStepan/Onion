@@ -826,6 +826,7 @@ public class ChatActivity extends AppCompatActivity {
 				mediaController.setMediaPlayer(((VideoHolder) holder).video);
 			} else if (holder instanceof PhotoHolder) {
 				Log.i("CONTENT", "photo");
+				Log.i("RECEIVED_PHOTO", pathToPhotoAndVideo + path);
 				((PhotoHolder) holder).photo.setImageBitmap(BitmapFactory.decodeFile(pathToPhotoAndVideo + path));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
