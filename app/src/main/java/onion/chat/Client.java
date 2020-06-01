@@ -179,7 +179,7 @@ public class Client {
 						}
 						break;
 					case "video":
-						if (sendVideo(sock, receiver, read(new File(ChatActivity.pathToPhotoAndVideo + path)))) {
+						if (sendVideo(sock, receiver, read(new File(path)))) {
 							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
 							log("message " + type + " sent");
 						}

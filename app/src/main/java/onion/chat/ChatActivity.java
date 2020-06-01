@@ -818,7 +818,7 @@ public class ChatActivity extends AppCompatActivity {
 			//holder.message.setText(content);
 			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
-				File receivedVideo = new File(pathToPhotoAndVideo + path);
+				File receivedVideo = new File(path);
 				Log.i("PATH_TO_VIDEO", receivedVideo.getPath());
 				((VideoHolder) holder).video.setVideoPath(receivedVideo.getPath());
 				MediaController mediaController = new MediaController(holder.itemView.getContext());
