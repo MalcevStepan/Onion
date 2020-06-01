@@ -178,7 +178,6 @@ public class Client {
 		void onStatusChange(boolean loading);
 	}
 
-
 	public boolean testIfServerIsUp() {
 		Sock sock = connect(tor.getID());
 		boolean ret = !sock.isClosed();

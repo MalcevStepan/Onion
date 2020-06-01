@@ -9,17 +9,10 @@ android {
         targetSdkVersion 29
         versionCode 5
         versionName "5"
-
-
-        ndk {
-            ldLibs "log"
-            abiFilter "armeabi-v7a"
-        }
-
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

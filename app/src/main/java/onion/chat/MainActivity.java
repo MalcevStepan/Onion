@@ -1005,6 +1005,4 @@ public class MainActivity extends AppCompatActivity
             if (badge != null) count = view.findViewById(R.id.count);
         }
     }
-
-
 }
