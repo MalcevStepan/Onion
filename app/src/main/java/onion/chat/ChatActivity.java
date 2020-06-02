@@ -673,47 +673,6 @@ public class ChatActivity extends AppCompatActivity {
 		return sdf.format(new Date(t));
 	}
 
-	private Bitmap getBitmap(String path) {
-		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
-		// Decode image size
-		BitmapFactory.Options options = new BitmapFactory.Options();
-		options.inJustDecodeBounds = true;
-		BitmapFactory.decodeFile(path, options);
-		int scale = 1;
-		while ((options.outWidth * options.outHeight) * (1 / Math.pow(scale, 2)) > IMAGE_MAX_SIZE)
-			scale++;
-		Log.d("SCALE", "scale = " + scale + ", orig-width: " + options.outWidth + ", orig-height: " + options.outHeight);
-
-		Bitmap resultBitmap = null;
-		if (scale > 1) {
-			scale--;
-			// scale to max possible inSampleSize that still yields an image
-			// larger than target
-			options = new BitmapFactory.Options();
-			options.inSampleSize = scale;
-			resultBitmap = BitmapFactory.decodeFile(path, options);
-
-			// resize to desired dimensions
-			int height = resultBitmap.getHeight();
-			int width = resultBitmap.getWidth();
-			Log.d("SCALE", "1th scale operation dimenions - width: " + width + ", height: " + height);
-
-			double y = Math.sqrt(IMAGE_MAX_SIZE / (((double) width) / height));
-			double x = (y / height) * width;
-
-			//Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x, (int) y, true);
-			//resultBitmap.recycle();
-			//resultBitmap = scaledBitmap;
-
-			System.gc();
-		} else {
-			resultBitmap = BitmapFactory.decodeFile(path);
-		}
-
-		Log.d("SIZE", "bitmap size - width: " + resultBitmap.getWidth() + ", height: " + resultBitmap.getHeight());
-		return resultBitmap;
-	}
-
 	private Bitmap getBitmap(Uri path) throws IOException {
 		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
 		// Decode image size
@@ -921,7 +880,11 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("CONTENT", "photo");
 				path = self ? pathToPhotoAndVideo + path : path;
 				Log.i("RECEIVED_PHOTO", path);
-				((PhotoHolder) holder).photo.setImageBitmap(getBitmap(path));
+				try {
+					((PhotoHolder) holder).photo.setImageBitmap(getBitmap(Uri.parse(path)));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
 				path = self ? pathToAudio + path : path;
