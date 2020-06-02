@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
+import androidx.loader.content.CursorLoader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -390,12 +391,11 @@ public class ChatActivity extends AppCompatActivity {
 						for (int currentItem = 0; currentItem < count; currentItem++) {
 							Bitmap photo = null;
 							try {
-								photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getClipData().getItemAt(currentItem).getUri());
+								photo = getBitmap(data.getClipData().getItemAt(currentItem).getUri());
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
 							ByteArrayOutputStream stream = new ByteArrayOutputStream();
-							assert photo != null;
 							photo.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 							byte[] byteArray = stream.toByteArray();
 							photo.recycle();
@@ -419,7 +419,7 @@ public class ChatActivity extends AppCompatActivity {
 						Toast.makeText(this, "PHOTO CHOOSED", Toast.LENGTH_SHORT).show();
 						Bitmap photo = null;
 						try {
-							photo = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+							photo = getBitmap(data.getData());
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -672,17 +672,16 @@ public class ChatActivity extends AppCompatActivity {
 		@SuppressLint("SimpleDateFormat") DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		return sdf.format(new Date(t));
 	}
+
 	private Bitmap getBitmap(String path) {
-		final int IMAGE_MAX_SIZE = 1200000; // 1.2MP
+		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
 		// Decode image size
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		BitmapFactory.decodeFile(path, options);
 		int scale = 1;
-		while ((options.outWidth * options.outHeight) * (1 / Math.pow(scale, 2)) >
-				IMAGE_MAX_SIZE) {
+		while ((options.outWidth * options.outHeight) * (1 / Math.pow(scale, 2)) > IMAGE_MAX_SIZE)
 			scale++;
-		}
 		Log.d("SCALE", "scale = " + scale + ", orig-width: " + options.outWidth + ", orig-height: " + options.outHeight);
 
 		Bitmap resultBitmap = null;
@@ -699,18 +698,66 @@ public class ChatActivity extends AppCompatActivity {
 			int width = resultBitmap.getWidth();
 			Log.d("SCALE", "1th scale operation dimenions - width: " + width + ", height: " + height);
 
-			double y = Math.sqrt(IMAGE_MAX_SIZE
-					/ (((double) width) / height));
+			double y = Math.sqrt(IMAGE_MAX_SIZE / (((double) width) / height));
 			double x = (y / height) * width;
 
-			Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x,
-					(int) y, true);
-			resultBitmap.recycle();
-			resultBitmap = scaledBitmap;
+			//Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x, (int) y, true);
+			//resultBitmap.recycle();
+			//resultBitmap = scaledBitmap;
 
 			System.gc();
 		} else {
 			resultBitmap = BitmapFactory.decodeFile(path);
+		}
+
+		Log.d("SIZE", "bitmap size - width: " + resultBitmap.getWidth() + ", height: " + resultBitmap.getHeight());
+		return resultBitmap;
+	}
+
+	private Bitmap getBitmap(Uri path) throws IOException {
+		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
+		// Decode image size
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		InputStream is = getContentResolver().openInputStream(path);
+		BitmapFactory.decodeStream(is, null, options);
+		assert is != null;
+		is.close();
+		int scale = 1;
+		while ((options.outWidth * options.outHeight) * (1 / Math.pow(scale, 2)) > IMAGE_MAX_SIZE)
+			scale++;
+		Log.d("SCALE", "scale = " + scale + ", orig-width: " + options.outWidth + ", orig-height: " + options.outHeight);
+
+		Bitmap resultBitmap;
+		if (scale > 1) {
+			scale--;
+			// scale to max possible inSampleSize that still yields an image
+			// larger than target
+			options = new BitmapFactory.Options();
+			options.inSampleSize = scale;
+			InputStream is2 = getContentResolver().openInputStream(path);
+			resultBitmap = BitmapFactory.decodeStream(is2, null, options);
+			assert is2 != null;
+			is2.close();
+
+			// resize to desired dimensions
+			int height = resultBitmap.getHeight();
+			int width = resultBitmap.getWidth();
+			Log.d("SCALE", "1th scale operation dimenions - width: " + width + ", height: " + height);
+
+			double y = Math.sqrt(IMAGE_MAX_SIZE / (((double) width) / height));
+			double x = (y / height) * width;
+
+			//Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x, (int) y, true);
+			//resultBitmap.recycle();
+			//resultBitmap = scaledBitmap;
+
+			System.gc();
+		} else {
+			InputStream is2 = getContentResolver().openInputStream(path);
+			resultBitmap = BitmapFactory.decodeStream(is2);
+			assert is2 != null;
+			is2.close();
 		}
 
 		Log.d("SIZE", "bitmap size - width: " + resultBitmap.getWidth() + ", height: " + resultBitmap.getHeight());

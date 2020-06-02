@@ -79,6 +79,7 @@ public class Client {
 		return sock.writeAudio(sender, audio);
 
 	}
+
 	private boolean sendVideo(Sock sock, String receiver, byte[] video) {
 		if (sock.isClosed()) {
 			return false;
@@ -90,6 +91,7 @@ public class Client {
 		return sock.writeVideo(sender, video);
 
 	}
+
 	private boolean sendImage(Sock sock, String receiver, byte[] image) {
 		if (sock.isClosed()) {
 			return false;
@@ -139,8 +141,7 @@ public class Client {
 		byte[] buffer = new byte[(int) file.length()];
 		try (InputStream ios = new FileInputStream(file)) {
 			if (ios.read(buffer) == -1) {
-				throw new IOException(
-						"EOF reached while trying to read the whole file");
+				throw new IOException("EOF reached while trying to read the whole file");
 			}
 		}
 		return buffer;
