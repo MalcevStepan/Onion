@@ -17,6 +17,8 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -31,7 +33,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	String socketName, receiver, sender;
 	private LocalServerSocket serverSocket;
 	private LocalSocket ls;
-	ImageButton hangup;
+	ImageButton hangup, pickup;
 	TextView contactName, status;
 	AudioRecord audioRecord;
 	Sock sock;
@@ -41,7 +43,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, audioFormat);
 	int timeout = 1000;
 	String LOG_TAG = "AUDIO_CALL";
-	boolean isConnected, isClicked = false;;
+	boolean isConnected;
 	AudioTrack audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
 
 	Thread serverThread = new Thread() {
@@ -73,7 +75,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 								runOnUiThread(() -> status.setText("Connected"));
 								startAudioCallThreads();
 								break;
-							}
+							}else if(b[0] == 0)disconnect();
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -101,7 +103,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 						runOnUiThread(() -> status.setText("Connected"));
 						startAudioCallThreads();
 						break;
-					}
+					}else if(b[0] == 0)disconnect();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -122,6 +124,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 
 		setContentView(R.layout.activity_audio_call);
 		hangup = findViewById(R.id.hangup);
+		pickup = findViewById(R.id.pickup);
 		contactName = findViewById(R.id.contactName);
 		status = findViewById(R.id.connectStatus);
 		Intent intent = getIntent();
@@ -129,8 +132,11 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		sender = intent.getStringExtra("sender");
 		contactName.setText(intent.getStringExtra("name"));
 		boolean isSender = intent.getStringExtra("receiver") == null;
+		int width = ((ViewGroup) hangup.getParent()).getWidth();
 		// CALL TO CONTACT AND WAITING FOR CONNECTION
 		if (isSender) {
+			pickup.setVisibility(View.GONE);
+			hangup.setTranslationX((float) (width / 2));
 			Log.i(LOG_TAG, "start listening");
 			try {
 				socketName = new File(this.getFilesDir(), "socket").getAbsolutePath();
@@ -146,7 +152,12 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			serverThread.start();
 		} else {
 			status.setText("Incoming call");
-			hangup.setImageDrawable(getDrawable(R.drawable.pick_up_icon));
+			pickup.setOnClickListener(view -> {
+				status.setText("Waiting...");
+				pickup.setVisibility(View.GONE);
+				hangup.setTranslationX((float) (width / 2));
+				receiverThread.start();
+			});
 		}
 
 		new Thread(() -> {
@@ -158,15 +169,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			}
 		}).start();
 
-		hangup.setOnClickListener(view -> {
-			if (isSender || isClicked) new Thread(this::disconnect).start();
-			else {
-				status.setText("Waiting...");
-				receiverThread.start();
-				isClicked = true;
-				hangup.setBackground(getDrawable(R.drawable.phone_hangup_icon));
-			}
-		});
+		hangup.setOnClickListener(view -> new Thread(this::disconnect).start());
 	}
 
 	void startAudioCallThreads() {
@@ -217,6 +220,13 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 
 	private void disconnect() {
 		isConnected = false;
+		if (out != null) {
+			try {
+				out.write(new byte[]{0});
+				out.flush();
+			} catch (IOException ignored) {
+			}
+		}
 		runOnUiThread(() -> status.setText("Disconnect"));
 		try {
 			Thread.sleep(50);
