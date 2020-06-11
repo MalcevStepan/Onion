@@ -630,7 +630,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.i("ChatActivity", "OnResume");
 		server = Server.getInstance(this);
 		server.setListener(() -> runOnUiThread(this::update));
-
+		sender = tor.getID();
 		tor.setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy())
 				sendPendingAndUpdate("resume");

@@ -41,12 +41,6 @@ public class HostService extends Service {
     }
 
     @Override
-    public void onStart(Intent intent, int startId) {
-        Server.getInstance(this);
-        Tor.getInstance(this);
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Server.getInstance(this);
         Tor.getInstance(this);
