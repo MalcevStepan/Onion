@@ -202,8 +202,7 @@ public class Sock {
 						writer.write(new byte[]{-2});
 						break;
 				}
-			}
-			else
+			} else
 				return false;
 			if (writeBytes(sender, content)) {
 				flush();
@@ -216,6 +215,7 @@ public class Sock {
 			return false;
 		}
 	}
+
 	public boolean writeAdd(String sender, String name) {
 		try {
 			if (writer != null)
@@ -304,6 +304,8 @@ public class Sock {
 	}
 
 	public boolean isClosed() {
-		return sock.isClosed();
+		if (sock != null)
+			return sock.isClosed();
+		else return false;
 	}
 }

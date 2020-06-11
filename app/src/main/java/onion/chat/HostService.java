@@ -74,11 +74,7 @@ public class HostService extends Service {
             public void run() {
                 log("update");
                 client.doSendPendingFriends();
-                try {
-                    client.doSendAllPendingMessages();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                client.doSendAllPendingMessages();
             }
         }, 0, 1000 * 60 * 60);
 

@@ -87,14 +87,20 @@ public class Client {
 		cur.close();
 	}
 
-	public void doSendAllPendingMessages() throws IOException {
+	public void doSendAllPendingMessages() {
 		log("start send all pending messages");
 		log("do send all pending messages");
 		Cursor cur = db.getReadableDatabase().query("contacts", null, "outgoing=0 AND incoming=0", null, null, null, null);
 		while (cur.moveToNext()) {
 			log("try to send friend request");
 			String address = cur.getString(cur.getColumnIndex("address"));
-			doSendPendingMessages(address);
+			new Thread(() -> {
+				try {
+					doSendPendingMessages(address);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}).start();
 		}
 		cur.close();
 	}
@@ -147,15 +153,14 @@ public class Client {
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
 		log(String.valueOf(cur.getCount()));
 		if (cur.getCount() > 0) {
+			Sock sock = connect(address);
 			while (cur.moveToNext()) {
 				long index = cur.getLong(cur.getColumnIndex("_id"));
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
 				String path = new String(content);
-
-				Sock sock = connect(address);
-				while(sock.sock.isClosed()){
+				while (sock.sock.isClosed()) {
 					sock = connect(address);
 				}
 				Log.i("Client", "trying to send message");
