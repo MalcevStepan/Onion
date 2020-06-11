@@ -41,7 +41,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, audioFormat);
 	int timeout = 1000;
 	String LOG_TAG = "AUDIO_CALL";
-	boolean isConnected;
+	boolean isConnected, isClicked = false;;
 	AudioTrack audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
 
 	Thread serverThread = new Thread() {
@@ -160,10 +160,11 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		}).start();
 
 		hangup.setOnClickListener(view -> {
-			if (isSender || isConnected) new Thread(this::disconnect).start();
+			if (isSender || isClicked) new Thread(this::disconnect).start();
 			else {
 				status.setText("Waiting...");
 				receiverThread.start();
+				isClicked = false;
 			}
 		});
 	}

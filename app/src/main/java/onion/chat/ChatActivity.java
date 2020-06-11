@@ -574,6 +574,7 @@ public class ChatActivity extends AppCompatActivity {
 		super.onDestroy();
 		releasePlayer();
 		releaseRecorder();
+		
 		Log.i("ONDESTROY", "closing socket");
 		/*if (sock != null)
 			new Thread(() -> {
