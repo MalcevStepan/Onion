@@ -11,6 +11,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
@@ -85,10 +86,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	};
 	Thread receiverThread = new Thread(() -> {
 		while (!isConnected) {
-			sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
-			Log.i(LOG_TAG, "socket connected");
-			in = sock.reader;
-			out = sock.writer;
 			if (in == null || out == null)
 				continue;
 			try {
@@ -132,11 +129,9 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		sender = intent.getStringExtra("sender");
 		contactName.setText(intent.getStringExtra("name"));
 		boolean isSender = intent.getStringExtra("receiver") == null;
-		int width = ((ViewGroup) hangup.getParent()).getWidth();
 		// CALL TO CONTACT AND WAITING FOR CONNECTION
 		if (isSender) {
 			pickup.setVisibility(View.GONE);
-			hangup.setTranslationX((float) (width / 2));
 			Log.i(LOG_TAG, "start listening");
 			try {
 				socketName = new File(this.getFilesDir(), "socket").getAbsolutePath();
@@ -152,10 +147,13 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			serverThread.start();
 		} else {
 			status.setText("Incoming call");
+			sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
+			Log.i(LOG_TAG, "socket connected");
+			in = sock.reader;
+			out = sock.writer;
 			pickup.setOnClickListener(view -> {
 				status.setText("Waiting...");
 				pickup.setVisibility(View.GONE);
-				hangup.setTranslationX((float) (width / 2));
 				receiverThread.start();
 			});
 		}

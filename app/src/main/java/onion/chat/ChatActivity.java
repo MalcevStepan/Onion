@@ -995,7 +995,6 @@ public class ChatActivity extends AppCompatActivity {
 			int color = pending ? 0xff000000 : 0xff888888;
 			((ChatHolder) holder).time.setTextColor(color);
 			((ChatHolder) holder).status.setTextColor(color);
-			log("sender is " + sender + "; address is " + address);
 			String path = new String(content);
 			boolean self = path.split("/").length <= 3;
 
