@@ -49,7 +49,6 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
@@ -702,7 +701,7 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	@Override
-	public void onBackPressed(){
+	public void onBackPressed() {
 
 	}
 
@@ -861,14 +860,9 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	static class CallHolder extends ChatHolder {
-		private ImageButton accept, decline;
-		private TextView audioText;
 
 		public CallHolder(View v) {
 			super(v);
-			accept = v.findViewById(R.id.accept);
-			decline = v.findViewById(R.id.decline);
-			audioText = v.findViewById(R.id.audioText);
 		}
 	}
 
@@ -970,7 +964,6 @@ public class ChatActivity extends AppCompatActivity {
 				((ChatHolder) holder).card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, getResources().getDisplayMetrics()));
 
 
-
 			String status = "";
 			if (sender.equals(address)) {
 				if (othername.isEmpty())
@@ -1002,29 +995,11 @@ public class ChatActivity extends AppCompatActivity {
 			int color = pending ? 0xff000000 : 0xff888888;
 			((ChatHolder) holder).time.setTextColor(color);
 			((ChatHolder) holder).status.setTextColor(color);
-			log("sender is "+ sender + "; address is "+ address);
+			log("sender is " + sender + "; address is " + address);
 			String path = new String(content);
 			boolean self = path.split("/").length <= 3;
 
-			if (holder instanceof CallHolder && sender.equals(address)) {
-				Log.i("CONTENT", "call");
-				((CallHolder) holder).accept.setOnClickListener(view -> {
-					if (tor.isReady()) {
-						db.deleteOutgoingMessage(id);
-						Intent intent = new Intent(context, AudioCallActivity.class);
-						intent.putExtra("address", receiver);
-						intent.putExtra("sender", senderName);
-						intent.putExtra("receiver", "");
-						intent.putExtra("name", db.getContactName(receiver));
-						server.close();
-						startActivity(intent);
-					} else if (!tor.isReady())
-						Toast.makeText(context, "Tor isn't ready", Toast.LENGTH_SHORT).show();
-				});
-				((CallHolder) holder).decline.setOnClickListener(view -> {
-
-				});
-			} else if (holder instanceof VideoHolder) {
+			if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
 				path = self ? pathToPhotoAndVideo + path : path;
 				File receivedVideo = new File(path);
@@ -1063,11 +1038,18 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
 				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
-			} else if (holder instanceof CallHolder) {
-				((CallHolder) holder).audioText.setVisibility(View.VISIBLE);
-				((CallHolder) holder).decline.setVisibility(View.GONE);
-				((CallHolder) holder).accept.setVisibility(View.GONE);
-			}
+			} else if (holder instanceof CallHolder && !status.equals("You"))
+				if (tor.isReady()) {
+					db.deleteOutgoingMessage(id);
+					Intent intent = new Intent(context, AudioCallActivity.class);
+					intent.putExtra("address", receiver);
+					intent.putExtra("sender", senderName);
+					intent.putExtra("receiver", "");
+					intent.putExtra("name", db.getContactName(receiver));
+					server.close();
+					startActivity(intent);
+				} else if (!tor.isReady())
+					Toast.makeText(context, "Tor isn't ready", Toast.LENGTH_SHORT).show();
 
 			((ChatHolder) holder).time.setText(time);
 			((ChatHolder) holder).status.setText(status);

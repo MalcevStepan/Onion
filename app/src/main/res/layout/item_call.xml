@@ -51,23 +51,8 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
                     android:id="@+id/audioText"
                     android:text="Audio call invite"/>
-                <ImageButton
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="20dp"
-                    android:background="@drawable/play"
-                    android:id="@+id/accept"
-                    android:backgroundTint="@color/cardview_dark_background"/>
-                <ImageButton
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:background="@drawable/pause"
-                    android:id="@+id/decline"
-                    android:backgroundTint="@color/cardview_dark_background"
-                    android:layout_marginStart="20dp"/>
             </LinearLayout>
 
             <LinearLayout

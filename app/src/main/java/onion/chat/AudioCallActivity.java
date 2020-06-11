@@ -44,6 +44,72 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	boolean isConnected;
 	AudioTrack audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
 
+	Thread serverThread = new Thread() {
+		@Override
+		public void run() {
+			LocalServerSocket ss = serverSocket;
+			if (ss != null)
+				while (true) {
+					Log.i(LOG_TAG, "waiting response");
+					final LocalSocket ls;
+					try {
+						ls = ss.accept();
+						if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
+						ls.setSoTimeout(timeout);
+					} catch (IOException ex) {
+						throw new Error(ex);
+					}
+					Log.i(LOG_TAG, "new connection");
+					try {
+						out = ls.getOutputStream();
+						in = ls.getInputStream();
+						byte[] b = new byte[1];
+						if (in.read(b) == 1) {
+							Log.i(LOG_TAG, "getting response");
+							if (b[0] == 1) {
+								out.write(new byte[]{1});
+								out.flush();
+								isConnected = true;
+								runOnUiThread(() -> status.setText("Connected"));
+								startAudioCallThreads();
+								break;
+							}
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+		}
+	};
+	Thread receiverThread = new Thread(() -> {
+		while (!isConnected) {
+			sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
+			Log.i(LOG_TAG, "socket connected");
+			in = sock.reader;
+			out = sock.writer;
+			if (in == null || out == null)
+				continue;
+			try {
+				out.write(new byte[]{1});
+				out.flush();
+				Log.i(LOG_TAG, "Request sent");
+				byte[] b = new byte[1];
+				if (in.read(b) == 1) {
+					Log.i(LOG_TAG, "Getting response");
+					if (b[0] == 1) {
+						isConnected = true;
+						hangup.setBackground(getDrawable(R.drawable.phone_hangup_icon));
+						runOnUiThread(() -> status.setText("Connected"));
+						startAudioCallThreads();
+						break;
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	});
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -63,8 +129,9 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		receiver = intent.getStringExtra("address");
 		sender = intent.getStringExtra("sender");
 		contactName.setText(intent.getStringExtra("name"));
+		boolean isSender = intent.getStringExtra("receiver") == null;
 		// CALL TO CONTACT AND WAITING FOR CONNECTION
-		if (intent.getStringExtra("receiver") == null) {
+		if (isSender) {
 			Log.i(LOG_TAG, "start listening");
 			try {
 				socketName = new File(this.getFilesDir(), "socket").getAbsolutePath();
@@ -77,71 +144,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				throw new Error(ex);
 			}
 			Log.i(LOG_TAG, "started listening");
-			new Thread() {
-				@Override
-				public void run() {
-					LocalServerSocket ss = serverSocket;
-					if (ss != null)
-						while (true) {
-							Log.i(LOG_TAG, "waiting response");
-							final LocalSocket ls;
-							try {
-								ls = ss.accept();
-								if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
-								ls.setSoTimeout(timeout);
-							} catch (IOException ex) {
-								throw new Error(ex);
-							}
-							Log.i(LOG_TAG, "new connection");
-							try {
-								out = ls.getOutputStream();
-								in = ls.getInputStream();
-								byte[] b = new byte[1];
-								if (in.read(b) == 1) {
-									Log.i(LOG_TAG, "getting response");
-									if (b[0] == 1) {
-										out.write(new byte[]{1});
-										out.flush();
-										isConnected = true;
-										runOnUiThread(() -> status.setText("Connected"));
-										startAudioCallThreads();
-										break;
-									}
-								}
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-						}
-				}
-			}.start();
+			serverThread.start();
 		} else {
-			new Thread(() -> {
-				while (!isConnected) {
-					sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
-					Log.i(LOG_TAG, "socket connected");
-					in = sock.reader;
-					out = sock.writer;
-					if (in == null || out == null)
-						continue;
-					try {
-						out.write(new byte[]{1});
-						out.flush();
-						Log.i(LOG_TAG, "Request sent");
-						byte[] b = new byte[1];
-						if (in.read(b) == 1) {
-							Log.i(LOG_TAG, "Getting response");
-							if (b[0] == 1) {
-								isConnected = true;
-								runOnUiThread(() -> status.setText("Connected"));
-								startAudioCallThreads();
-								break;
-							}
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}).start();
+			status.setText("Incoming call");
+			hangup.setImageDrawable(getDrawable(R.drawable.pick_up_icon));
 		}
 
 		new Thread(() -> {
@@ -153,7 +159,13 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			}
 		}).start();
 
-		hangup.setOnClickListener(view -> new Thread(this::disconnect).start());
+		hangup.setOnClickListener(view -> {
+			if (isSender || isConnected) new Thread(this::disconnect).start();
+			else {
+				status.setText("Waiting...");
+				receiverThread.start();
+			}
+		});
 	}
 
 	void startAudioCallThreads() {
@@ -205,6 +217,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	private void disconnect() {
 		isConnected = false;
 		runOnUiThread(() -> status.setText("Disconnect"));
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException ignored) {
+		}
 		if (sock != null) {
 			sock.close();
 			sock = null;
@@ -225,10 +241,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				audioRecord.stop();
 			} catch (IllegalStateException ignored) {
 			}
-		if (audioRecord != null) try {
-			audioRecord.release();
-		} catch (IllegalStateException ignored) {
-		}
 		if (audioReceived != null) try {
 			audioReceived.stop();
 		} catch (IllegalStateException ignored) {
