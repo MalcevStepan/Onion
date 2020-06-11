@@ -51,7 +51,6 @@ Java_onion_chat_AudioCallActivity_audioVoice(JNIEnv *env, jclass clazz, jbyteArr
 	for (unsigned i = 0; i < len; i++)
 		sum += abs((int) buffer[i] - 127);
 	sum /= len;
-	__android_log_print(ANDROID_LOG_INFO, "SUM", "SUM %u\n", abs(((int) sum) - 127));
 	if (abs(((int) sum) - 127) > 20 && abs(((int) sum) - 127) < 200) {
 		for (unsigned i = 0; i < len; i++)
 			buffer[i] = (unsigned char) fmin(((200.0 / abs((int) sum - 127)) * (unsigned) buffer[i]), UCHAR_MAX);
