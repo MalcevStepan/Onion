@@ -81,35 +81,37 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				@Override
 				public void run() {
 					LocalServerSocket ss = serverSocket;
-					if (ss != null) {
-						Log.i(LOG_TAG, "waiting response");
-						final LocalSocket ls;
-						try {
-							ls = ss.accept();
-							if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
-							ls.setSoTimeout(timeout);
-						} catch (IOException ex) {
-							throw new Error(ex);
-						}
-						Log.i(LOG_TAG, "new connection");
-						try {
-							out = ls.getOutputStream();
-							in = ls.getInputStream();
-							byte[] b = new byte[1];
-							if (in.read(b) == 1) {
-								Log.i(LOG_TAG, "getting response");
-								if (b[0] == 1) {
-									out.write(new byte[]{1});
-									out.flush();
-									isConnected = true;
-									runOnUiThread(() -> status.setText("Connected"));
-									startAudioCallThreads();
-								}
+					if (ss != null)
+						while (true) {
+							Log.i(LOG_TAG, "waiting response");
+							final LocalSocket ls;
+							try {
+								ls = ss.accept();
+								if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
+								ls.setSoTimeout(timeout);
+							} catch (IOException ex) {
+								throw new Error(ex);
 							}
-						} catch (IOException e) {
-							e.printStackTrace();
+							Log.i(LOG_TAG, "new connection");
+							try {
+								out = ls.getOutputStream();
+								in = ls.getInputStream();
+								byte[] b = new byte[1];
+								if (in.read(b) == 1) {
+									Log.i(LOG_TAG, "getting response");
+									if (b[0] == 1) {
+										out.write(new byte[]{1});
+										out.flush();
+										isConnected = true;
+										runOnUiThread(() -> status.setText("Connected"));
+										startAudioCallThreads();
+										break;
+									}
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
-					}
 				}
 			}.start();
 		} else {
@@ -197,7 +199,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 							disconnect();
 				}
 			}
-			audioReceived.stop();
 		}).start();
 	}
 

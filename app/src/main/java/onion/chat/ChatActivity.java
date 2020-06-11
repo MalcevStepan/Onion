@@ -630,7 +630,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.i("ChatActivity", "OnResume");
 		server = Server.getInstance(this);
 		server.setListener(() -> runOnUiThread(this::update));
-		sender = tor.getID();
+
 		tor.setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy())
 				sendPendingAndUpdate("resume");
@@ -699,6 +699,11 @@ public class ChatActivity extends AppCompatActivity {
 		tor.setListener(null);
 		client.setStatusListener(null);
 		super.onPause();
+	}
+
+	@Override
+	public void onBackPressed(){
+
 	}
 
 	private String date(String str) {
@@ -997,7 +1002,7 @@ public class ChatActivity extends AppCompatActivity {
 			int color = pending ? 0xff000000 : 0xff888888;
 			((ChatHolder) holder).time.setTextColor(color);
 			((ChatHolder) holder).status.setTextColor(color);
-
+			log("sender is "+ sender + "; address is "+ address);
 			String path = new String(content);
 			boolean self = path.split("/").length <= 3;
 
