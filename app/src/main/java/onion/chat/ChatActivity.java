@@ -1038,7 +1038,7 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
 				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
-			} else if (holder instanceof CallHolder && !status.equals("You"))
+			} else if (holder instanceof CallHolder && !sender.equals("You"))
 				if (tor.isReady()) {
 					db.deleteOutgoingMessage(id);
 					Intent intent = new Intent(context, AudioCallActivity.class);
