@@ -148,7 +148,7 @@ public class Client {
 		}
 	}
 
-	private synchronized void doSendPendingMessages(String address) throws IOException {
+	private void doSendPendingMessages(String address) throws IOException {
 		log("do send pending messages");
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
 		log(String.valueOf(cur.getCount()));
@@ -160,9 +160,6 @@ public class Client {
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
 				String path = new String(content);
-				while (sock.sock.isClosed()) {
-					sock = connect(address);
-				}
 				Log.i("Client", "trying to send message");
 				switch (type) {
 					case "msg":

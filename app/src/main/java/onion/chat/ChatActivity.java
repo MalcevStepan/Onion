@@ -92,6 +92,8 @@ public class ChatActivity extends AppCompatActivity {
 	Cursor cursor;
 	Database db;
 	Tor tor;
+	Notifier notifier;
+	Server server;
 	String address;
 	Client client;
 
@@ -175,6 +177,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
+		notifier = Notifier.getInstance(this);
 		sender = tor.getID();
 
 		pathToAudio = this.getCacheDir().getPath() + "/Media/Audio";
@@ -625,9 +628,10 @@ public class ChatActivity extends AppCompatActivity {
 	protected void onResume() {
 		super.onResume();
 		Log.i("ChatActivity", "OnResume");
-		Server.getInstance(this).setListener(() -> runOnUiThread(this::update));
+		server = Server.getInstance(this);
+		server.setListener(() -> runOnUiThread(this::update));
 
-		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
+		tor.setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy())
 				sendPendingAndUpdate("resume");
 		}));
@@ -672,7 +676,7 @@ public class ChatActivity extends AppCompatActivity {
 			}
 		}, 0, 1000 * 60);
 
-		Notifier.getInstance(this).onResumeActivity();
+		notifier.onResumeActivity();
 
 		db.clearIncomingMessageCount(address);
 
@@ -688,10 +692,10 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	protected void onPause() {
 		db.clearIncomingMessageCount(address);
-		Notifier.getInstance(this).onPauseActivity();
+		notifier.onPauseActivity();
 		timer.cancel();
 		timer.purge();
-		Server.getInstance(this).setListener(null);
+		server.setListener(null);
 		tor.setListener(null);
 		client.setStatusListener(null);
 		super.onPause();
@@ -961,6 +965,7 @@ public class ChatActivity extends AppCompatActivity {
 				((ChatHolder) holder).card.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, getResources().getDisplayMetrics()));
 
 
+
 			String status = "";
 			if (sender.equals(address)) {
 				if (othername.isEmpty())
@@ -980,6 +985,7 @@ public class ChatActivity extends AppCompatActivity {
 						intent.putExtra("address", receiver);
 						intent.putExtra("sender", senderName);
 						intent.putExtra("name", db.getContactName(receiver));
+						server.close();
 						startActivity(intent);
 					}
 					//status = "\u2713";
@@ -1005,6 +1011,7 @@ public class ChatActivity extends AppCompatActivity {
 						intent.putExtra("sender", senderName);
 						intent.putExtra("receiver", "");
 						intent.putExtra("name", db.getContactName(receiver));
+						server.close();
 						startActivity(intent);
 					} else if (!tor.isReady())
 						Toast.makeText(context, "Tor isn't ready", Toast.LENGTH_SHORT).show();

@@ -20,9 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 public class Server {
 
@@ -35,7 +33,6 @@ public class Server {
 	private LocalSocket ls;
 	private Tor tor;
 	private Client client;
-	private String sender = "";
 
 	public Server(Context c) {
 		context = c;
@@ -260,6 +257,13 @@ public class Server {
 
 	public String getSocketName() {
 		return socketName;
+	}
+
+	public void close() {
+		instance = null;
+		ls = null;
+		serverSocket = null;
+		System.gc();
 	}
 
 	public interface Listener {

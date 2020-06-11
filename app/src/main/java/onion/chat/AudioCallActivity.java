@@ -209,14 +209,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			sock.close();
 			sock = null;
 		}
-		if (ls != null) {
-			try {
-				ls.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-			ls = null;
-		}
+		ls = null;
 		if (in != null) {
 			try {
 				in.close();
@@ -232,6 +225,11 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				audioRecord.stop();
 			} catch (IllegalStateException ignored) {
 			}
+		if (audioReceived != null) try {
+			audioReceived.stop();
+		} catch (IllegalStateException ise) {
+		}
+		System.gc();
 		finish();
 	}
 

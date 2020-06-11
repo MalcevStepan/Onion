@@ -88,7 +88,6 @@ public class HostService extends Service {
         assert pMgr != null;
         wakeLock = pMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WakeLock");
         wakeLock.acquire();
-
     }
 
     @Override
