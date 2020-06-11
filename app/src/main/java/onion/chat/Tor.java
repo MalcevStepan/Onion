@@ -225,7 +225,7 @@ public class Tor {
     private void extractFile(Context context, int id, String name) {
         try {
             InputStream i = context.getResources().openRawResource(id);
-            OutputStream o = context.openFileOutput(name, context.MODE_PRIVATE);
+            OutputStream o = context.openFileOutput(name, Context.MODE_PRIVATE);
             int read;
             byte[] buffer = new byte[4096];
             while ((read = i.read(buffer)) > 0) {

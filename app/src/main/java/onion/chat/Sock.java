@@ -173,14 +173,41 @@ public class Sock {
 		}
 	}
 
-	public boolean writeMessage(String sender, String message) {
+	public boolean writeMessage(String sender, byte[] content, String type) {
 		try {
-			if (writer != null)
-				writer.write(new byte[]{1});
+			if (writer != null) {
+				switch (type) {
+					case "msg":
+						writer.write(new byte[]{1});
+						break;
+					case "audio":
+						writer.write(new byte[]{4});
+						break;
+					case "status":
+						writer.write(new byte[]{6});
+						break;
+					case "responseStatus":
+						writer.write(new byte[]{7});
+						break;
+					case "video":
+						writer.write(new byte[]{5});
+						break;
+					case "photo":
+						writer.write(new byte[]{3});
+						break;
+					case "exit":
+						writer.write(new byte[]{-1});
+						break;
+					case "incomingCall":
+						writer.write(new byte[]{-2});
+						break;
+				}
+			}
 			else
 				return false;
-			if (writeBytes(sender, message.getBytes())) {
+			if (writeBytes(sender, content)) {
 				flush();
+				writer.close();
 				return true;
 			} else
 				return false;
@@ -189,58 +216,6 @@ public class Sock {
 			return false;
 		}
 	}
-
-	public boolean writeAudio(String sender, byte[] audio) {
-		try {
-			if (writer != null)
-				writer.write(new byte[]{4});
-			else
-				return false;
-			if (writeBytes(sender, audio)) {
-				flush();
-				return true;
-			} else
-				return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public boolean writeVideo(String sender, byte[] video) {
-		try {
-			if (writer != null)
-				writer.write(new byte[]{5});
-			else
-				return false;
-			if (writeBytes(sender, video)) {
-				flush();
-				return true;
-			} else
-				return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public boolean writeImage(String sender, byte[] image) {
-		try {
-			if (writer != null)
-				writer.write(new byte[]{3});
-			else
-				return false;
-			if (writeBytes(sender, image)) {
-				flush();
-				return true;
-			} else
-				return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
 	public boolean writeAdd(String sender, String name) {
 		try {
 			if (writer != null)

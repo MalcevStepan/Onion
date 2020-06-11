@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +27,7 @@ public class Database extends SQLiteOpenHelper {
 	private Context context;
 
 	public Database(Context context) {
-		super(context, "cdb", null, 4);
+		super(context, "cdb", null, 5);
 		this.context = context;
 	}
 
@@ -49,7 +50,7 @@ public class Database extends SQLiteOpenHelper {
 		// outgoing: pending outgoing friend request
 		// incoming: incoing friend request / someone else wants to add us / will be shown on the requests tab instead of the contacts tab
 		// pending: the number of unread messages
-		db.execSQL("CREATE TABLE contacts ( _id INTEGER PRIMARY KEY, address TEXT UNIQUE, name TEXT, outgoing INTEGER DEFAULT 0, incoming INTEGER DEFAULT 0, pending INTEGER DEFAULT 0)");
+		db.execSQL("CREATE TABLE contacts ( _id INTEGER PRIMARY KEY,status INTEGER DEFAULT 0, address TEXT UNIQUE, name TEXT, outgoing INTEGER DEFAULT 0, incoming INTEGER DEFAULT 0, pending INTEGER DEFAULT 0)");
 
 		// index contacts by which tab they should appear on and by their names
 		db.execSQL("CREATE INDEX contactindex ON contacts ( incoming, name, address )");
@@ -70,10 +71,11 @@ public class Database extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		// adding new column if oldVersion is older
-		if (newVersion > oldVersion) {
+		if (oldVersion < 4) {
 			db.execSQL("DROP TABLE content");
 			db.execSQL("ALTER TABLE messages ADD COLUMN content BLOB");
-		}
+		} else if (oldVersion < newVersion)
+			db.execSQL("ALTER TABLE contacts ADD COLUMN status INTEGER DEFAULT 0");
 	}
 
 
@@ -97,6 +99,15 @@ public class Database extends SQLiteOpenHelper {
 		return n;
 	}
 
+	public synchronized void setStatus(String contact, byte status) {
+		Log.i("DB", "SETTING STATUS " + status);
+		SQLiteDatabase database = getWritableDatabase();
+		if (status == (byte) 0)
+			database.execSQL("UPDATE contacts SET status=0 WHERE address=?", new String[]{contact});
+		else
+			database.execSQL("UPDATE contacts SET status=1 WHERE address=?", new String[]{contact});
+	}
+
 	public synchronized long addPendingOutgoingMessage(String sender, String receiver, String type, byte[] content) {
 		ContentValues v = new ContentValues();
 		v.put("sender", sender);
@@ -110,6 +121,10 @@ public class Database extends SQLiteOpenHelper {
 
 	public synchronized boolean abortOutgoingMessage(long id) {
 		int n = getWritableDatabase().delete("messages", "_id=? AND pending=1", new String[]{"" + id});
+		return n > 0;
+	}
+	public synchronized boolean deleteOutgoingMessage(long id) {
+		int n = getWritableDatabase().delete("messages", "_id=?", new String[]{"" + id});
 		return n > 0;
 	}
 

@@ -10,6 +10,7 @@
 
 package onion.chat;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
@@ -57,51 +58,14 @@ public class Client {
 		return connect(receiver).writeAdd(tor.getID(), db.getName());
 	}
 
-	private boolean sendMsg(Sock sock, String receiver, String content) {
+	private boolean sendMessage(Sock sock, String receiver, byte[] content, String type) {
 		if (sock.isClosed()) {
 			return false;
 		}
-
 		String sender = tor.getID();
+		Log.i("SENDER", sender);
 		if (receiver.equals(sender)) return false;
-
-		return sock.writeMessage(sender, content);
-	}
-
-	private boolean sendAudio(Sock sock, String receiver, byte[] audio) {
-		if (sock.isClosed()) {
-			return false;
-		}
-
-		String sender = tor.getID();
-		if (receiver.equals(sender)) return false;
-
-		return sock.writeAudio(sender, audio);
-
-	}
-
-	private boolean sendVideo(Sock sock, String receiver, byte[] video) {
-		if (sock.isClosed()) {
-			return false;
-		}
-
-		String sender = tor.getID();
-		if (receiver.equals(sender)) return false;
-
-		return sock.writeVideo(sender, video);
-
-	}
-
-	private boolean sendImage(Sock sock, String receiver, byte[] image) {
-		if (sock.isClosed()) {
-			return false;
-		}
-
-		String sender = tor.getID();
-		if (receiver.equals(sender)) return false;
-
-		return sock.writeImage(sender, image);
-
+		return sock.writeMessage(sender, content, type);
 	}
 
 	public void startSendPendingFriends() {
@@ -111,7 +75,6 @@ public class Client {
 
 	public void doSendPendingFriends() {
 		log("do send pending friends");
-		Database db = Database.getInstance(context);
 		Cursor cur = db.getReadableDatabase().query("contacts", null, "outgoing=?", new String[]{"1"}, null, null, null);
 		while (cur.moveToNext()) {
 			log("try to send friend request");
@@ -127,7 +90,6 @@ public class Client {
 	public void doSendAllPendingMessages() throws IOException {
 		log("start send all pending messages");
 		log("do send all pending messages");
-		Database db = Database.getInstance(context);
 		Cursor cur = db.getReadableDatabase().query("contacts", null, "outgoing=0 AND incoming=0", null, null, null, null);
 		while (cur.moveToNext()) {
 			log("try to send friend request");
@@ -147,47 +109,90 @@ public class Client {
 		return buffer;
 	}
 
-	private void doSendPendingMessages(String address) throws IOException {
+	public void clearStatus() {
+		ContentValues cv = new ContentValues();
+		cv.put("status", 0);
+		Log.i("Client", "updated rows " + db.getWritableDatabase().update("contacts", cv, null, null));
+	}
+
+	public void sendStatusToFriends(byte status) {
+		Cursor contactCursor = db.getReadableDatabase().query("contacts", new String[]{"address"}, null, null, null, null, null);
+		Sock sock;
+		String receiver;
+		contactCursor.moveToFirst();
+		if (contactCursor.getCount() > 0) {
+			do {
+				receiver = contactCursor.getString(0);
+				sock = connect(receiver);
+				if (sock.sock.isBound()) {
+					sendMessage(sock, receiver, new byte[]{status}, "status");
+					Log.i("CLIENT 1", "STATUS SENT TO " + receiver);
+				}
+			} while (contactCursor.moveToNext());
+			sock.close();
+		}
+		contactCursor.close();
+	}
+
+	public void sendStatusToFriend(String receiver, byte status) {
+		Sock sock = connect(receiver);
+		if (sock.sock.isBound()) {
+			sendMessage(sock, receiver, new byte[]{status}, "responseStatus");
+			Log.i("CLIENT 2", "STATUS SENT TO " + receiver);
+		}
+	}
+
+	private synchronized void doSendPendingMessages(String address) throws IOException {
 		log("do send pending messages");
-		Database db = Database.getInstance(context);
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
 		log(String.valueOf(cur.getCount()));
 		if (cur.getCount() > 0) {
-			Sock sock = connect(address);
 			while (cur.moveToNext()) {
-				log("try to send message");
+				long index = cur.getLong(cur.getColumnIndex("_id"));
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
 				String path = new String(content);
+
+				Sock sock = connect(address);
+				while(sock.sock.isClosed()){
+					sock = connect(address);
+				}
+				Log.i("Client", "trying to send message");
 				switch (type) {
 					case "msg":
-						if (sendMsg(sock, receiver, new String(content))) {
-							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						if (sendMessage(sock, receiver, content, type)) {
+							db.markMessageAsSent(index);
 							log("message " + type + " sent");
 						}
 						break;
 					case "photo":
-						if (sendImage(sock, receiver, read(new File(ChatActivity.pathToPhotoAndVideo + path)))) {
-							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						if (sendMessage(sock, receiver, read(new File(ChatActivity.pathToPhotoAndVideo + path)), type)) {
+							db.markMessageAsSent(index);
 							log("message " + type + " sent");
 						}
 						break;
 					case "audio":
-						if (sendAudio(sock, receiver, read(new File(ChatActivity.pathToAudio + path)))) {
-							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						if (sendMessage(sock, receiver, read(new File(ChatActivity.pathToAudio + path)), type)) {
+							db.markMessageAsSent(index);
 							log("message " + type + " sent");
 						}
 						break;
 					case "video":
-						if (sendVideo(sock, receiver, read(new File(path)))) {
-							db.markMessageAsSent(cur.getLong(cur.getColumnIndex("_id")));
+						if (sendMessage(sock, receiver, read(new File(path)), type)) {
+							db.markMessageAsSent(index);
 							log("message " + type + " sent");
 						}
 						break;
+					case "incomingCall":
+						if (sendMessage(sock, receiver, content, type)) {
+							db.markMessageAsSent(index);
+							log("call sent");
+						}
+						break;
 				}
+				sock.close();
 			}
-			sock.close();
 		}
 		cur.close();
 	}

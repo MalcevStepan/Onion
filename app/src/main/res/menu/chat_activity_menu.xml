@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/icon_id"
+    <item android:id="@+id/phone_call"
         android:visible="true"
         android:title="@string/video_audio_call"
         android:icon="@drawable/ic_phone_black_24dp"

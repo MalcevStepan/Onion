@@ -12,12 +12,12 @@ package onion.chat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -29,13 +29,12 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
-import androidx.loader.content.CursorLoader;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.renderscript.FieldPacker;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
@@ -43,12 +42,14 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
@@ -58,17 +59,14 @@ import android.widget.VideoView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.spongycastle.asn1.cmp.CAKeyUpdAnnContent;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -181,7 +179,6 @@ public class ChatActivity extends AppCompatActivity {
 		tor = Tor.getInstance(this);
 		sender = tor.getID();
 
-
 		pathToAudio = this.getCacheDir().getPath() + "/Media/Audio";
 		pathToPhotoAndVideo = this.getCacheDir().getPath() + "/Media/Video";
 		new File(pathToAudio + "/" + sender).mkdirs();
@@ -213,7 +210,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		recycler.setLayoutManager(new LinearLayoutManager(this));
 
-		adapter = new ChatAdapter();
+		adapter = new ChatAdapter(this, address, sender);
 		recycler.setAdapter(adapter);
 
 
@@ -348,6 +345,7 @@ public class ChatActivity extends AppCompatActivity {
 			intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 			startActivityForResult(Intent.createChooser(intent, "Select Picture"), GALLERY_SUCCESS);
 		});
+
 
 		startService(new Intent(this, HostService.class));
 
@@ -500,7 +498,6 @@ public class ChatActivity extends AppCompatActivity {
 		String[] proj = {MediaStore.Images.Media.DATA};
 		Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
 		if (cursor.moveToFirst()) {
-			;
 			int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 			res = cursor.getString(column_index);
 		}
@@ -577,6 +574,18 @@ public class ChatActivity extends AppCompatActivity {
 		super.onDestroy();
 		releasePlayer();
 		releaseRecorder();
+		Log.i("ONDESTROY", "closing socket");
+		/*if (sock != null)
+			new Thread(() -> {
+				client.sendMessage(sock, address, new byte[]{-1}, "exit");
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				sock.close();
+				sock = null;
+			}).start();*/
 	}
 
 	@Override
@@ -587,9 +596,37 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.phone_call:
+				if (ContextCompat.checkSelfPermission(this,
+						Manifest.permission.RECORD_AUDIO)
+						!= PackageManager.PERMISSION_GRANTED)
+					ActivityCompat.requestPermissions(this,
+							new String[]{Manifest.permission.RECORD_AUDIO},
+							1);
+				else if (tor.isReady()) {
+					db.addPendingOutgoingMessage(sender, address, "incomingCall", new byte[]{1});
+					sendPendingAndUpdate("call");
+					recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
+					rep = 0;
+				} else if (!tor.isReady())
+					Toast.makeText(this, "Tor isn't ready", Toast.LENGTH_SHORT).show();
+				return true;
+			/*case R.id.video_call:
+				Intent intent = new Intent(this, VideoCallActivity.class);
+				intent.putExtra("address", address);
+				intent.putExtra("sender", true);
+				startActivity(intent);
+				return true;*/
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
-
+		Log.i("ChatActivity", "OnResume");
 		Server.getInstance(this).setListener(() -> runOnUiThread(this::update));
 
 		Tor.getInstance(this).setListener(() -> runOnUiThread(() -> {
@@ -673,6 +710,47 @@ public class ChatActivity extends AppCompatActivity {
 		return sdf.format(new Date(t));
 	}
 
+	private Bitmap getBitmap(String path) {
+		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
+		// Decode image size
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(path, options);
+		int scale = 1;
+		while ((options.outWidth * options.outHeight) * (1 / Math.pow(scale, 2)) > IMAGE_MAX_SIZE)
+			scale++;
+		Log.d("SCALE", "scale = " + scale + ", orig-width: " + options.outWidth + ", orig-height: " + options.outHeight);
+
+		Bitmap resultBitmap = null;
+		if (scale > 1) {
+			scale--;
+			// scale to max possible inSampleSize that still yields an image
+			// larger than target
+			options = new BitmapFactory.Options();
+			options.inSampleSize = scale;
+			resultBitmap = BitmapFactory.decodeFile(path, options);
+
+			// resize to desired dimensions
+			int height = resultBitmap.getHeight();
+			int width = resultBitmap.getWidth();
+			Log.d("SCALE", "1th scale operation dimenions - width: " + width + ", height: " + height);
+
+			double y = Math.sqrt(IMAGE_MAX_SIZE / (((double) width) / height));
+			double x = (y / height) * width;
+
+			//Bitmap scaledBitmap = Bitmap.createScaledBitmap(resultBitmap, (int) x, (int) y, true);
+			//resultBitmap.recycle();
+			//resultBitmap = scaledBitmap;
+
+			System.gc();
+		} else {
+			resultBitmap = BitmapFactory.decodeFile(path);
+		}
+
+		Log.d("SIZE", "bitmap size - width: " + resultBitmap.getWidth() + ", height: " + resultBitmap.getHeight());
+		return resultBitmap;
+	}
+
 	private Bitmap getBitmap(Uri path) throws IOException {
 		final int IMAGE_MAX_SIZE = 120000; // 1.2MP
 		// Decode image size
@@ -700,6 +778,7 @@ public class ChatActivity extends AppCompatActivity {
 			is2.close();
 
 			// resize to desired dimensions
+			assert resultBitmap != null;
 			int height = resultBitmap.getHeight();
 			int width = resultBitmap.getWidth();
 			Log.d("SCALE", "1th scale operation dimenions - width: " + width + ", height: " + height);
@@ -750,6 +829,17 @@ public class ChatActivity extends AppCompatActivity {
 		}
 	}
 
+	/*static class IncomingCallHolder extends ChatHolder {
+		private ImageButton accept;
+		private ImageButton decline;
+
+		public IncomingCallHolder(View v) {
+			super(v);
+			accept = v.findViewById(R.id.acceptCall);
+			decline = v.findViewById(R.id.declineCall);
+		}
+	}*/
+
 	static class AudioHolder extends ChatHolder {
 		private FloatingActionButton fab;
 		private ProgressBar progress;
@@ -760,6 +850,18 @@ public class ChatActivity extends AppCompatActivity {
 			fab = v.findViewById(R.id.playAudio);
 			progress = v.findViewById(R.id.audioProgress);
 			time = v.findViewById(R.id.audioTime);
+		}
+	}
+
+	static class CallHolder extends ChatHolder {
+		private ImageButton accept, decline;
+		private TextView audioText;
+
+		public CallHolder(View v) {
+			super(v);
+			accept = v.findViewById(R.id.accept);
+			decline = v.findViewById(R.id.decline);
+			audioText = v.findViewById(R.id.audioText);
 		}
 	}
 
@@ -783,28 +885,48 @@ public class ChatActivity extends AppCompatActivity {
 
 	class ChatAdapter extends RecyclerView.Adapter {
 
+		Context context;
+		String receiver, senderName;
+
+		ChatAdapter(Context context, String receiver, String senderName) {
+			this.context = context;
+			this.receiver = receiver;
+			this.senderName = senderName;
+		}
+
 		@Override
 		public int getItemViewType(int position) {
 			cursor.moveToFirst();
 			cursor.moveToPosition(position);
 			String type = cursor.getString(cursor.getColumnIndex("type"));
-			return MessageType.getEnum(type).value;
+			switch (type) {
+				case "incomingCall":
+					return 5;
+				case "video":
+					return 2;
+				case "photo":
+					return 3;
+				case "audio":
+					return 4;
+				default:
+					return 1;
+			}
 		}
 
 		@Override
 		@NonNull
 		public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-			switch (MessageType.values()[viewType - 1]) {
-				case TEXT:
-					return new MessageHolder(getLayoutInflater().inflate(R.layout.item_message, parent, false));
-				case AUDIO:
+			switch (viewType) {
+				case 5:
+					return new CallHolder(getLayoutInflater().inflate(R.layout.item_call, parent, false));
+				case 4:
 					return new AudioHolder(getLayoutInflater().inflate(R.layout.item_audio, parent, false));
-				case VIDEO:
+				case 2:
 					return new VideoHolder(getLayoutInflater().inflate(R.layout.item_video, parent, false));
-				case PHOTO:
+				case 3:
 					return new PhotoHolder(getLayoutInflater().inflate(R.layout.item_photo, parent, false));
 				default:
-					return null;
+					return new MessageHolder(getLayoutInflater().inflate(R.layout.item_message, parent, false));
 			}
 		}
 
@@ -854,6 +976,14 @@ public class ChatActivity extends AppCompatActivity {
 					//status = "Waiting...";
 				} else {
 					status = getString(R.string.message_sent);
+					if (holder instanceof CallHolder) {
+						db.deleteOutgoingMessage(id);
+						Intent intent = new Intent(context, AudioCallActivity.class);
+						intent.putExtra("address", receiver);
+						intent.putExtra("sender", senderName);
+						intent.putExtra("name", db.getContactName(receiver));
+						startActivity(intent);
+					}
 					//status = "\u2713";
 					//status = "Sent.";
 				}
@@ -866,8 +996,25 @@ public class ChatActivity extends AppCompatActivity {
 
 			String path = new String(content);
 			boolean self = path.split("/").length <= 3;
-			//holder.message.setText(content);
-			if (holder instanceof VideoHolder) {
+
+			if (holder instanceof CallHolder && sender.equals(address)) {
+				Log.i("CONTENT", "call");
+				((CallHolder) holder).accept.setOnClickListener(view -> {
+					if (tor.isReady()) {
+						db.deleteOutgoingMessage(id);
+						Intent intent = new Intent(context, AudioCallActivity.class);
+						intent.putExtra("address", receiver);
+						intent.putExtra("sender", senderName);
+						intent.putExtra("receiver", "");
+						intent.putExtra("name", db.getContactName(receiver));
+						startActivity(intent);
+					} else if (!tor.isReady())
+						Toast.makeText(context, "Tor isn't ready", Toast.LENGTH_SHORT).show();
+				});
+				((CallHolder) holder).decline.setOnClickListener(view -> {
+
+				});
+			} else if (holder instanceof VideoHolder) {
 				Log.i("CONTENT", "video");
 				path = self ? pathToPhotoAndVideo + path : path;
 				File receivedVideo = new File(path);
@@ -880,11 +1027,7 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("CONTENT", "photo");
 				path = self ? pathToPhotoAndVideo + path : path;
 				Log.i("RECEIVED_PHOTO", path);
-				try {
-					((PhotoHolder) holder).photo.setImageBitmap(getBitmap(Uri.parse(path)));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				((PhotoHolder) holder).photo.setImageBitmap(getBitmap(path));
 			} else if (holder instanceof AudioHolder) {
 				Log.i("AUDIO_ARRAY_LENGTH", String.valueOf(content.length));
 				path = self ? pathToAudio + path : path;
@@ -906,10 +1049,14 @@ public class ChatActivity extends AppCompatActivity {
 						mediaPlayer.start();
 					}*/
 				});
-			} else {
+			} else if (holder instanceof MessageHolder) {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
 				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
+			} else if (holder instanceof CallHolder) {
+				((CallHolder) holder).audioText.setVisibility(View.VISIBLE);
+				((CallHolder) holder).decline.setVisibility(View.GONE);
+				((CallHolder) holder).accept.setVisibility(View.GONE);
 			}
 
 			((ChatHolder) holder).time.setText(time);

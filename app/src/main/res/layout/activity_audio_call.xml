@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cardview_dark_background"
+    tools:context=".AudioCallActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ContactName"
+        android:textColor="@color/cardview_light_background"
+        android:textSize="30sp"
+        android:id="@+id/contactName"
+        android:layout_marginTop="100dp"
+        android:layout_centerHorizontal="true"/>
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_below="@id/contactName"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:id="@+id/avatarIcon"
+        android:background="@drawable/ic_account_circle_black_48dp"
+        android:backgroundTint="@color/cardview_light_background"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Waiting for response..."
+        android:textColor="@color/cardview_light_background"
+        android:singleLine="true"
+        android:textSize="25sp"
+        android:id="@+id/connectStatus"
+        android:layout_marginTop="30dp"
+        android:layout_below="@id/avatarIcon"
+        android:layout_centerHorizontal="true"/>
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/hangup"
+        android:background="@drawable/phone_hangup_icon"
+        android:layout_marginBottom="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
+
+</RelativeLayout>

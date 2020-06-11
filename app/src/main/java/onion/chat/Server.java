@@ -33,10 +33,12 @@ public class Server {
 	private Listener listener = null;
 	private LocalServerSocket serverSocket;
 	private LocalSocket ls;
+	private Tor tor;
+	private Client client;
+	private String sender = "";
 
 	public Server(Context c) {
 		context = c;
-
 		log("start listening");
 		try {
 			socketName = new File(context.getFilesDir(), "socket").getAbsolutePath();
@@ -71,11 +73,11 @@ public class Server {
 					new Thread() {
 						@Override
 						public void run() {
-							handle(ls);
 							try {
+								handle(ls.getInputStream());
 								ls.close();
-							} catch (IOException ex) {
-								ex.printStackTrace();
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
 						}
 					}.start();
@@ -90,7 +92,7 @@ public class Server {
 				} catch (InterruptedException ex) {
 					return;
 				}
-				Tor tor = Tor.getInstance(context);
+				tor = Tor.getInstance(context);
 				for (int i = 0; i < 20 && !tor.isReady(); i++) {
 					log("TorBlog not ready");
 					try {
@@ -100,7 +102,7 @@ public class Server {
 					}
 				}
 				log("TorBlog ready");
-				final Client client = Client.getInstance(context);
+				client = Client.getInstance(context);
 				for (int i = 0; i < 20 && !client.testIfServerIsUp(); i++) {
 					log("Hidden server descriptors not yet propagated");
 					try {
@@ -133,139 +135,125 @@ public class Server {
 			listener.onChange();
 	}
 
-	private void handle(InputStream is, OutputStream os) throws Exception {
-		while (true) {
-			byte[] info = new byte[1];
-			if (is.read(info) == 1) {
-				String senderName = null;
-				byte[] senderNameLength = new byte[4];
-				if (is.read(senderNameLength) == 4) {
-					int length = ByteBuffer.wrap(senderNameLength).getInt();
-					if (length > 0) {
-						byte[] result = new byte[length];
-						while (length > 0) {
-							int k;
-							if ((k = is.read(result, result.length - length, length)) > 0)
-								length -= k;
-							else
-								throw new Exception("Error reading");
-						}
-						senderName = new String(result);
+	private void handle(InputStream is) throws Exception {
+		byte[] info = new byte[1];
+		if (is.read(info) == 1) {
+			String senderName = null;
+			byte[] senderNameLength = new byte[4];
+			if (is.read(senderNameLength) == 4) {
+				int length = ByteBuffer.wrap(senderNameLength).getInt();
+				if (length > 0) {
+					byte[] result = new byte[length];
+					while (length > 0) {
+						int k;
+						if ((k = is.read(result, result.length - length, length)) > 0)
+							length -= k;
+						else throw new Exception("Error reading");
 					}
-				}
-
-				byte[] bLength = new byte[4];
-				if (is.read(bLength) == 4) {
-					int length = ByteBuffer.wrap(bLength).getInt();
-					if (length > 0) {
-						byte[] result = new byte[length];
-						while (length > 0) {
-							int k;
-							if ((k = is.read(result, result.length - length, length)) > 0)
-								length -= k;
-							else
-								throw new Exception("Error reading");
-						}
-
-						Database db = Database.getInstance(context);
-						FileOutputStream out;
-						long time = System.currentTimeMillis();
-						switch (info[0]) {
-							case 0:
-								String name = new String(result).trim();
-								if (!name.equals("")) {
-									db.addContact(senderName, false, true, name);
-									if (listener != null) listener.onChange();
-								}
-								Log.e("TEST", name);
-								break;
-							case 1:
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "msg", result, System.currentTimeMillis());
-								if (listener != null) listener.onChange();
-								if (db.hasContact(senderName))
-									Notifier.getInstance(context).onMessage();
-								Log.e("TEST", new String(result));
-								break;
-							case 2:
-								Client.getInstance(context).startSendPendingMessages(senderName);
-								break;
-							case 5:
-								new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
-								File video = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/video" + time + ".mp4");
-								out = new FileOutputStream(video);
-								out.write(result);
-								out.flush();
-								out.close();
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "video", video.getPath().getBytes(), System.currentTimeMillis());
-								if (listener != null) listener.onChange();
-								if (db.hasContact(senderName))
-									Notifier.getInstance(context).onMessage();
-								Log.e("TEST", "take video");
-								Client.getInstance(context).startSendPendingMessages(senderName);
-								break;
-							case 3:
-								new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
-								File photo = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/photo" + time + ".jpeg");
-								out = new FileOutputStream(photo);
-								out.write(result);
-								out.flush();
-								out.close();
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", photo.getPath().getBytes(), System.currentTimeMillis());
-								if (listener != null) listener.onChange();
-								if (db.hasContact(senderName))
-									Notifier.getInstance(context).onMessage();
-								Log.e("TEST", "take photo");
-								break;
-							case 4:
-								new File(ChatActivity.pathToAudio + "/" + senderName).mkdir();
-								File audio = new File(ChatActivity.pathToAudio + "/" + senderName + "/received" + time + ".3gpp");
-								out = new FileOutputStream(audio);
-								out.write(result);
-								out.flush();
-								out.close();
-								db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", audio.getPath().getBytes(), System.currentTimeMillis());
-								if (listener != null) listener.onChange();
-								if (db.hasContact(senderName))
-									Notifier.getInstance(context).onMessage();
-								Log.e("TEST", "take audio");
-								break;
-						}
-					}
+					senderName = new String(result);
 				}
 			}
-		}
-	}
 
-	private void handle(LocalSocket s) {
-		InputStream is = null;
-		OutputStream os = null;
-		try {
-			is = s.getInputStream();
-		} catch (IOException ex) {
-		}
-		try {
-			os = s.getOutputStream();
-		} catch (IOException ex) {
-		}
-		if (is != null && os != null) {
-			try {
-				handle(is, os);
-			} catch (Throwable ex) {
-				ex.printStackTrace();
-			}
-		}
-		if (is != null) {
-			try {
-				is.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-		if (os != null) {
-			try {
-				os.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
+			byte[] bLength = new byte[4];
+			if (is.read(bLength) == 4) {
+				int length = ByteBuffer.wrap(bLength).getInt();
+				if (length > 0) {
+					byte[] result = new byte[length];
+					while (length > 0) {
+						int k;
+						if ((k = is.read(result, result.length - length, length)) > 0)
+							length -= k;
+						else
+							throw new Exception("Error reading");
+					}
+
+					Database db = Database.getInstance(context);
+					FileOutputStream out;
+					long time = System.currentTimeMillis();
+					switch (info[0]) {
+						case 0:
+							String name = new String(result).trim();
+							if (!name.equals("")) {
+								db.addContact(senderName, false, true, name);
+								if (listener != null) listener.onChange();
+							}
+							Log.e("TEST", name);
+							break;
+						case 1:
+							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "msg", result, System.currentTimeMillis());
+							if (listener != null) listener.onChange();
+							if (db.hasContact(senderName))
+								Notifier.getInstance(context).onMessage();
+							Log.e("TEST", new String(result));
+							break;
+						case 2:
+							Client.getInstance(context).startSendPendingMessages(senderName);
+							break;
+						case 5:
+							new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
+							File video = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/video" + time + ".mp4");
+							out = new FileOutputStream(video);
+							out.write(result);
+							out.flush();
+							out.close();
+							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "video", video.getPath().getBytes(), System.currentTimeMillis());
+							if (listener != null) listener.onChange();
+							if (db.hasContact(senderName))
+								Notifier.getInstance(context).onMessage();
+							Log.e("TEST", "take video");
+							Client.getInstance(context).startSendPendingMessages(senderName);
+							break;
+						case 3:
+							new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName).mkdir();
+							File photo = new File(ChatActivity.pathToPhotoAndVideo + "/" + senderName + "/photo" + time + ".jpeg");
+							out = new FileOutputStream(photo);
+							out.write(result);
+							out.flush();
+							out.close();
+							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "photo", photo.getPath().getBytes(), System.currentTimeMillis());
+							if (listener != null) listener.onChange();
+							if (db.hasContact(senderName))
+								Notifier.getInstance(context).onMessage();
+							Log.e("TEST", "take photo");
+							break;
+						case 4:
+							new File(ChatActivity.pathToAudio + "/" + senderName).mkdir();
+							File audio = new File(ChatActivity.pathToAudio + "/" + senderName + "/received" + time + ".3gpp");
+							out = new FileOutputStream(audio);
+							out.write(result);
+							out.flush();
+							out.close();
+							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "audio", audio.getPath().getBytes(), System.currentTimeMillis());
+							if (listener != null) listener.onChange();
+							if (db.hasContact(senderName))
+								Notifier.getInstance(context).onMessage();
+							Log.e("TEST", "take audio");
+							break;
+						case 6:
+							Log.i("SERVER", "GETTING STATUS");
+							assert senderName != null;
+							db.setStatus(senderName, result[0]);
+							if (listener != null) listener.onChange();
+							if (result[0] == 1) {
+								Log.i("SERVER", "SENDING STATUS");
+								client.sendStatusToFriend(senderName, (byte) 1);//ONLINE
+							}
+							break;
+						case 7:
+							db.setStatus(senderName, result[0]);
+							if (listener != null) listener.onChange();
+							break;
+						case -2:
+							db.addUnreadIncomingMessage(senderName, db.getContactName(senderName), Tor.getInstance(context).getID(), "incomingCall", result, System.currentTimeMillis());
+							if (listener != null) listener.onChange();
+							if (db.hasContact(senderName))
+								Notifier.getInstance(context).onMessage();
+							break;
+					}
+					is.close();
+					is = null;
+					System.gc();
+				}
 			}
 		}
 	}
