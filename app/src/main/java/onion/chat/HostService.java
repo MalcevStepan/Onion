@@ -19,7 +19,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -86,6 +85,7 @@ public class HostService extends Service {
         */
 
         PowerManager pMgr = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        assert pMgr != null;
         wakeLock = pMgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WakeLock");
         wakeLock.acquire();
 

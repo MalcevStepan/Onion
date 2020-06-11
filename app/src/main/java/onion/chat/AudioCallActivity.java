@@ -152,15 +152,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			}
 		}).start();
 
-		hangup.setOnClickListener(view -> {
-			new Thread(this::disconnect).start();
-			if (audioRecord != null)
-				try {
-					audioRecord.stop();
-				} catch (IllegalStateException ignored) {
-
-				}
-		});
+		hangup.setOnClickListener(view -> new Thread(this::disconnect).start());
 	}
 
 	void startAudioCallThreads() {
@@ -235,8 +227,12 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				ex.printStackTrace();
 			}
 		}
-		if (audioRecord != null) audioRecord.release();
-		startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("chat:" + receiver), getApplicationContext(), ChatActivity.class));
+		if (audioRecord != null)
+			try {
+				audioRecord.stop();
+			} catch (IllegalStateException ignored) {
+			}
+		finish();
 	}
 
 	@Override
@@ -248,6 +244,12 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	@Override
 	protected void onPause() {
 		super.onPause();
+		disconnect();
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
 		disconnect();
 	}
 
