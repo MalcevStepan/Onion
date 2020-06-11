@@ -164,7 +164,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			else {
 				status.setText("Waiting...");
 				receiverThread.start();
-				isClicked = false;
+				isClicked = true;
 			}
 		});
 	}
