@@ -86,6 +86,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	};
 	Thread receiverThread = new Thread(() -> {
 		while (!isConnected) {
+			sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
+			Log.i(LOG_TAG, "socket connected");
+			in = sock.reader;
+			out = sock.writer;
 			if (in == null || out == null)
 				continue;
 			try {
@@ -147,10 +151,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			serverThread.start();
 		} else {
 			status.setText("Incoming call");
-			sock = new Sock(AudioCallActivity.this, receiver + ".onion", Tor.getHiddenServicePort());
-			Log.i(LOG_TAG, "socket connected");
-			in = sock.reader;
-			out = sock.writer;
 			pickup.setOnClickListener(view -> {
 				status.setText("Waiting...");
 				pickup.setVisibility(View.GONE);
