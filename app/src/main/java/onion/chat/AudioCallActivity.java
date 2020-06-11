@@ -224,9 +224,17 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				audioRecord.stop();
 			} catch (IllegalStateException ignored) {
 			}
+		if (audioRecord != null) try {
+			audioRecord.release();
+		} catch (IllegalStateException ignored) {
+		}
 		if (audioReceived != null) try {
 			audioReceived.stop();
-		} catch (IllegalStateException ise) {
+		} catch (IllegalStateException ignored) {
+		}
+		if (audioReceived != null) try {
+			audioReceived.release();
+		} catch (IllegalStateException ignored) {
 		}
 		System.gc();
 		finish();
