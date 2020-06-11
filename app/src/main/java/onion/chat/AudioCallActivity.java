@@ -98,7 +98,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 					Log.i(LOG_TAG, "Getting response");
 					if (b[0] == 1) {
 						isConnected = true;
-						hangup.setBackground(getDrawable(R.drawable.phone_hangup_icon));
 						runOnUiThread(() -> status.setText("Connected"));
 						startAudioCallThreads();
 						break;
@@ -165,6 +164,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				status.setText("Waiting...");
 				receiverThread.start();
 				isClicked = true;
+				hangup.setBackground(getDrawable(R.drawable.phone_hangup_icon));
 			}
 		});
 	}
