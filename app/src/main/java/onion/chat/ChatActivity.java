@@ -574,7 +574,7 @@ public class ChatActivity extends AppCompatActivity {
 		super.onDestroy();
 		releasePlayer();
 		releaseRecorder();
-		
+
 		Log.i("ONDESTROY", "closing socket");
 		/*if (sock != null)
 			new Thread(() -> {
@@ -947,8 +947,7 @@ public class ChatActivity extends AppCompatActivity {
 			boolean pending = cursor.getInt(cursor.getColumnIndex("pending")) > 0;
 			boolean tx = sender.equals(tor.getID());
 
-
-			if (sender.equals(tor.getID())) sender = "You";
+			if (tx) sender = "You";
 
 			if (tx) {
 				((ChatHolder) holder).left.setVisibility(View.VISIBLE);
@@ -966,7 +965,7 @@ public class ChatActivity extends AppCompatActivity {
 
 
 			String status = "";
-			if (sender.equals(address)) {
+			if (!tx) {
 				if (othername.isEmpty())
 					status = address;
 				else
@@ -1039,7 +1038,7 @@ public class ChatActivity extends AppCompatActivity {
 				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
 				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
-			} else if (holder instanceof CallHolder && !sender.equals("You"))
+			} else if (holder instanceof CallHolder && !tx)
 				if (tor.isReady()) {
 					db.deleteOutgoingMessage(id);
 					Intent intent = new Intent(context, AudioCallActivity.class);
