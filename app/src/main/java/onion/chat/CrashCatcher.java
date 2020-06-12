@@ -72,6 +72,7 @@ public class CrashCatcher implements Thread.UncaughtExceptionHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		//context.startActivity(new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
 		System.exit(2);
 	}
 
