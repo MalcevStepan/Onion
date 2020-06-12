@@ -34,16 +34,16 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	private LocalSocket ls;
 	ImageButton hangup, pickup;
 	TextView contactName, status;
-	AudioRecord audioRecord;
 	Sock sock;
 	InputStream in;
 	OutputStream out;
-	int rateInHz = 8000, channelConfig = AudioFormat.CHANNEL_IN_MONO, audioFormat = AudioFormat.ENCODING_PCM_8BIT,
+	static int rateInHz = 8000, channelConfig = AudioFormat.CHANNEL_IN_MONO, audioFormat = AudioFormat.ENCODING_PCM_8BIT,
 			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, audioFormat);
 	int timeout = 1000;
 	String LOG_TAG = "AUDIO_CALL";
 	boolean isConnected;
-	AudioTrack audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+	AudioTrack audioReceived, beepCall;
+	AudioRecord audioRecord;
 
 	Thread serverThread = new Thread() {
 		@Override
@@ -122,6 +122,9 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		if (sensor != null)
 			sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
+		audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+		beepCall = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+		audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, rateInHz, channelConfig, audioFormat, bufferSize);
 		setContentView(R.layout.activity_audio_call);
 		hangup = findViewById(R.id.hangup);
 		pickup = findViewById(R.id.pickup);
@@ -159,11 +162,12 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 
 		new Thread(() -> {
 			byte[] audioBuff = new byte[bufferSize];
-			audioReceived.play();
+			beepCall.play();
 			while (!isConnected) {
 				audioCallSound(audioBuff);
-				audioReceived.write(audioBuff, 0, bufferSize);
+				beepCall.write(audioBuff, 0, bufferSize);
 			}
+			beepCall.release();
 		}).start();
 
 		hangup.setOnClickListener(view -> new Thread(this::disconnect).start());
@@ -174,7 +178,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		byte[] inbuff = new byte[bufferSize];
 		new Thread(() -> {
 			Log.i(LOG_TAG, "Starting record");
-			audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, rateInHz, channelConfig, audioFormat, bufferSize);
 			audioRecord.startRecording();
 			while (isConnected) {
 				audioRecord.read(outbuff, 0, bufferSize);
@@ -247,11 +250,19 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			} catch (IllegalStateException ignored) {
 			}
 		if (audioReceived != null) try {
-			audioReceived.stop();
+			audioReceived.release();
 		} catch (IllegalStateException ignored) {
 		}
 		if (audioReceived != null) try {
-			audioReceived.release();
+			audioReceived.stop();
+		} catch (IllegalStateException ignored) {
+		}
+		if (beepCall != null) try {
+			beepCall.release();
+		} catch (IllegalStateException ignored) {
+		}
+		if (beepCall != null) try {
+			beepCall.stop();
 		} catch (IllegalStateException ignored) {
 		}
 		System.gc();
@@ -261,12 +272,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		disconnect();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
 		disconnect();
 	}
 

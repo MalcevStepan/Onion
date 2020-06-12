@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -78,6 +79,7 @@ public class CrashCatcher implements Thread.UncaughtExceptionHandler {
 	private static void writeString(OutputStream clientOutputStream, String value) throws IOException {
 		clientOutputStream.write(new byte[]{(byte) value.length()});
 		clientOutputStream.write(value.getBytes());
+		Log.i("CrashCatcher", "Message sent");
 	}
 
 
