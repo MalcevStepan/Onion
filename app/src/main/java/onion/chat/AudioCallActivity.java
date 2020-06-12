@@ -11,7 +11,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
-import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
@@ -19,7 +18,6 @@ import android.net.LocalSocketAddress;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -76,7 +74,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 								runOnUiThread(() -> status.setText("Connected"));
 								startAudioCallThreads();
 								break;
-							}else if(b[0] == 0)disconnect();
+							} else if (b[0] == 0) disconnect();
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -104,7 +102,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 						runOnUiThread(() -> status.setText("Connected"));
 						startAudioCallThreads();
 						break;
-					}else if(b[0] == 0)disconnect();
+					} else if (b[0] == 0) disconnect();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -121,7 +119,8 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		assert sensorManager != null;
 		Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
-		sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+		if (sensor != null)
+			sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 		setContentView(R.layout.activity_audio_call);
 		hangup = findViewById(R.id.hangup);
