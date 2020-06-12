@@ -6,7 +6,7 @@ android {
 
 	defaultConfig {
 		applicationId "onion.chat"
-		minSdkVersion 23
+		minSdkVersion 20
 		targetSdkVersion 29
 		versionCode 9
 		versionName "9"
