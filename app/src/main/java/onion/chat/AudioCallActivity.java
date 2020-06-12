@@ -184,7 +184,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 						out.write(outbuff);
 						out.flush();
 					}
-					Log.i(LOG_TAG, "packet sent");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -200,12 +199,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 					if (in != null)
 						len = in.read(inbuff);
 					if (len > 1) {
-						Log.i(LOG_TAG, "packet received");
 						audioVoice(inbuff);
 						audioReceived.write(inbuff, 0, bufferSize);
 					} else if (len == -1)
 						disconnect();
-					Log.i(LOG_TAG, "LENGTH = " + len);
 				} catch (IOException e) {
 					e.printStackTrace();
 					if (sock != null)
