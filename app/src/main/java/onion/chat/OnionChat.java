@@ -1,10 +1,9 @@
 package onion.chat;
 
-import android.app.Application;
-
 import androidx.annotation.NonNull;
+import androidx.multidex.MultiDexApplication;
 
-public class OnionChat extends Application {
+public class OnionChat extends MultiDexApplication {
 
 	@Override
 	public void onCreate() {
