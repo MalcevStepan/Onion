@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity
 
 	Database db;
 	Tor tor;
+	TorStatusView torStatusView;
 	TabLayout tabLayout;
 	View contactPage, requestPage;
 	RecyclerView contactRecycler, requestRecycler;
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity
 
 		setContentView(R.layout.activity_main);
 		Toolbar toolbar = findViewById(R.id.toolbar);
+		torStatusView  = findViewById(R.id.torStatusView);
 		setSupportActionBar(toolbar);
 
 		FloatingActionButton fab = findViewById(R.id.fab);
@@ -608,7 +610,7 @@ public class MainActivity extends AppCompatActivity
 
 		Notifier.getInstance(this).onResumeActivity();
 
-		((TorStatusView) findViewById(R.id.torStatusView)).update();
+		torStatusView.update();
 
 		startService(new Intent(this, HostService.class));
 	}

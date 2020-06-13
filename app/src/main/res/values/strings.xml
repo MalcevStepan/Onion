@@ -85,5 +85,6 @@
     <string name="my_publications">My publications</string>
     <string name="video_audio_call">Video/audio call</string>
     <string name="timmess_market">Timmess market</string>
+    <string name="tor_update">torUpdate</string>
 
 </resources>

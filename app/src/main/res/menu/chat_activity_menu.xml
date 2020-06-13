@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+   <!-- <item android:id="@+id/update_tor"
+        android:visible="true"
+        android:icon="@drawable/update"
+        app:showAsAction="ifRoom"
+        android:title="@string/tor_update">
+    </item>-->
     <item android:id="@+id/phone_call"
         android:visible="true"
         android:title="@string/video_audio_call"

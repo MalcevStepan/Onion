@@ -85,6 +85,7 @@ public class ChatActivity extends AppCompatActivity {
 	static String pathToPhotoAndVideo;
 	ChatAdapter adapter;
 	RecyclerView recycler;
+	TorStatusView torStatusView;
 	ImageView videoIcon, microIcon, photoIcon, sendIcon, galleryIcon;
 	EditText edit;
 	TextView noMessages;
@@ -189,6 +190,7 @@ public class ChatActivity extends AppCompatActivity {
 		edit = findViewById(R.id.editmessage);
 		noMessages = findViewById(R.id.noMessages);
 		client = Client.getInstance(this);
+		torStatusView = findViewById(R.id.torStatusView);
 
 		address = getIntent().getDataString();
 
@@ -614,11 +616,13 @@ public class ChatActivity extends AppCompatActivity {
 				} else if (!tor.isReady())
 					Toast.makeText(this, "Tor isn't ready", Toast.LENGTH_SHORT).show();
 				return true;
-			/*case R.id.video_call:
-				Intent intent = new Intent(this, VideoCallActivity.class);
-				intent.putExtra("address", address);
-				intent.putExtra("sender", true);
-				startActivity(intent);
+			/*case R.id.update_tor:
+				tor.close();
+				torStatusView.update();
+				tor.setListener(() -> runOnUiThread(() -> {
+					if (!client.isBusy())
+						sendPendingAndUpdate("resume");
+				}));
 				return true;*/
 		}
 		return super.onOptionsItemSelected(item);
@@ -681,7 +685,7 @@ public class ChatActivity extends AppCompatActivity {
 
 		db.clearIncomingMessageCount(address);
 
-		((TorStatusView) findViewById(R.id.torStatusView)).update();
+		torStatusView.update();
 
 		startService(new Intent(this, HostService.class));
 	}
@@ -1034,7 +1038,6 @@ public class ChatActivity extends AppCompatActivity {
 					}*/
 				});
 			} else if (holder instanceof MessageHolder) {
-				Log.i("CONTENT", "content");
 				((MessageHolder) holder).message.setMovementMethod(LinkMovementMethod.getInstance());
 				((MessageHolder) holder).message.setText(Utils.linkify(ChatActivity.this, new String(content)));
 			} else if (holder instanceof CallHolder && !tx)
@@ -1075,5 +1078,4 @@ public class ChatActivity extends AppCompatActivity {
 		}
 
 	}
-
 }

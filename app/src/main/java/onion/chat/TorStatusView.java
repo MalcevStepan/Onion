@@ -17,7 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TorStatusView extends LinearLayout {
-
     public TorStatusView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
