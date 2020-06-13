@@ -10,6 +10,7 @@
 
 package onion.chat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -31,6 +32,9 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -85,6 +89,9 @@ public class MainActivity extends AppCompatActivity
 	Cursor contactCursor, requestCursor;
 	Client client;
 	boolean isInActivity = true;
+	private final int REQUEST_RECORD_AUDIO = 12;
+	private final int RECORD_AUDIO = 0;
+	private final int READ_EXTERNAL_STORAGE = 5;
 
 	int REQUEST_QR = 12;
 
@@ -96,6 +103,8 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		requestPermissions();
 
 		db = Database.getInstance(this);
 		tor = Tor.getInstance(this);
@@ -392,6 +401,17 @@ public class MainActivity extends AppCompatActivity
 		return true;
 	}
 
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (requestCode == READ_EXTERNAL_STORAGE && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to read external storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+		if (requestCode == RECORD_AUDIO && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to record audio. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+		if (requestCode == REQUEST_RECORD_AUDIO && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to record audio. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+	}
+
 	void sendStatus() {
 		new Thread(() -> {
 			while (isInActivity)
@@ -598,6 +618,7 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Log.i("MAIN", "onResume");
 		tor.setListener(() -> {
 			update();
 			send();
@@ -865,6 +886,21 @@ public class MainActivity extends AppCompatActivity
 				//.setMessage(txt)
 				.setView(view)
 				.show();
+	}
+
+	private void requestPermissions(){
+		if (ContextCompat.checkSelfPermission(this,
+				Manifest.permission.RECORD_AUDIO)
+				!= PackageManager.PERMISSION_GRANTED)
+			ActivityCompat.requestPermissions(this,
+					new String[]{Manifest.permission.RECORD_AUDIO},
+					REQUEST_RECORD_AUDIO);
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+					READ_EXTERNAL_STORAGE);
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
+					RECORD_AUDIO);
 	}
 
 	@Override
