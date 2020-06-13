@@ -12,10 +12,6 @@ package onion.blog;
 
 public class Native {
 
-    static {
-        System.loadLibrary("blog_app");
-    }
-
     native public static void killTor();
 
 }

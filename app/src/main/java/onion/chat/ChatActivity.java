@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -289,7 +290,7 @@ public class ChatActivity extends AppCompatActivity {
 							recycler.smoothScrollToPosition(Math.max(0, cursor.getCount() - 1));
 							rep = 0;
 						} else {
-							final Handler handler = new Handler();
+							final Handler handler = new Handler(Looper.getMainLooper());
 							handler.postDelayed(() -> {
 								recordStop();
 								redCircle.setVisibility(View.INVISIBLE);
