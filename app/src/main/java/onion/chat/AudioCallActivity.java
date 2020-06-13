@@ -39,7 +39,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	OutputStream out;
 	static int rateInHz = 8000, channelConfig = AudioFormat.CHANNEL_IN_MONO, audioFormat = AudioFormat.ENCODING_PCM_8BIT,
 			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, audioFormat);
-	int timeout = 1000;
 	String LOG_TAG = "AUDIO_CALL";
 	boolean isConnected;
 	AudioTrack audioReceived, beepCall;
@@ -56,7 +55,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 					try {
 						ls = ss.accept();
 						if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
-						ls.setSoTimeout(timeout);
 					} catch (IOException ex) {
 						throw new Error(ex);
 					}
@@ -165,7 +163,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			beepCall.play();
 			while (!isConnected) {
 				audioCallSound(audioBuff);
-				beepCall.write(audioBuff, 0, bufferSize);
+				try {
+					beepCall.write(audioBuff, 0, bufferSize);
+				} catch (IllegalStateException ignored) {
+				}
 			}
 			beepCall.release();
 		}).start();
@@ -202,7 +203,10 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 						len = in.read(inbuff);
 					if (len > 1) {
 						audioVoice(inbuff);
-						audioReceived.write(inbuff, 0, bufferSize);
+						try {
+							audioReceived.write(inbuff, 0, bufferSize);
+						} catch (IllegalStateException ignored) {
+						}
 					} else if (len == -1)
 						disconnect();
 				} catch (IOException e) {
@@ -258,11 +262,11 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		} catch (IllegalStateException ignored) {
 		}
 		if (beepCall != null) try {
-			beepCall.release();
+			beepCall.stop();
 		} catch (IllegalStateException ignored) {
 		}
 		if (beepCall != null) try {
-			beepCall.stop();
+			beepCall.release();
 		} catch (IllegalStateException ignored) {
 		}
 		System.gc();

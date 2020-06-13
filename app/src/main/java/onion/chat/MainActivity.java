@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity
 				} else {
 					holder.badge.setVisibility(View.GONE);
 				}
-				Log.i("contacts", "status is " + contactCursor.getInt(3));
+				//Log.i("contacts", "status is " + contactCursor.getInt(3));
 				holder.status.setText(contactCursor.getInt(3) == 1 ? "Online" : "Offline");
 			}
 

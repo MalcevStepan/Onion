@@ -67,17 +67,14 @@ public class Server {
 						continue;
 					}
 					log("new connection");
-					new Thread() {
-						@Override
-						public void run() {
-							try {
-								handle(ls.getInputStream());
-								ls.close();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
+					new Thread(() -> {
+						try {
+							handle(ls.getInputStream());
+							//ls.close();
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-					}.start();
+					}).start();
 				}
 			}
 		}.start();

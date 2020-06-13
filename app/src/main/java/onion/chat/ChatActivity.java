@@ -630,6 +630,7 @@ public class ChatActivity extends AppCompatActivity {
 		Log.i("ChatActivity", "OnResume");
 		server = Server.getInstance(this);
 		server.setListener(() -> runOnUiThread(this::update));
+		db.deleteOutgoingAudioCalls(address);
 
 		tor.setListener(() -> runOnUiThread(() -> {
 			if (!client.isBusy())
@@ -978,7 +979,6 @@ public class ChatActivity extends AppCompatActivity {
 				} else {
 					status = getString(R.string.message_sent);
 					if (holder instanceof CallHolder) {
-						db.deleteOutgoingMessage(id);
 						Intent intent = new Intent(context, AudioCallActivity.class);
 						intent.putExtra("address", receiver);
 						intent.putExtra("sender", senderName);

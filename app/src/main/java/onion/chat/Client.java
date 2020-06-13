@@ -63,7 +63,6 @@ public class Client {
 			return false;
 		}
 		String sender = tor.getID();
-		Log.i("SENDER", sender);
 		if (receiver.equals(sender)) return false;
 		return sock.writeMessage(sender, content, type);
 	}
@@ -153,13 +152,13 @@ public class Client {
 		Cursor cur = db.getReadableDatabase().query("messages", null, "pending=? AND receiver=?", new String[]{"1", address}, null, null, null);
 		log(String.valueOf(cur.getCount()));
 		if (cur.getCount() > 0) {
-			Sock sock = connect(address);
 			while (cur.moveToNext()) {
 				long index = cur.getLong(cur.getColumnIndex("_id"));
 				String receiver = cur.getString(cur.getColumnIndex("receiver"));
 				String type = cur.getString(cur.getColumnIndex("type"));
 				byte[] content = cur.getBlob(cur.getColumnIndex("content"));
 				String path = new String(content);
+				Sock sock = connect(address);
 				Log.i("Client", "trying to send message");
 				switch (type) {
 					case "msg":

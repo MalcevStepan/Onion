@@ -127,6 +127,14 @@ public class Database extends SQLiteOpenHelper {
 		int n = getWritableDatabase().delete("messages", "_id=?", new String[]{"" + id});
 		return n > 0;
 	}
+	public synchronized boolean deleteOutgoingAudioCalls(String receiver) {
+		int n = getWritableDatabase().delete("messages", "type=? AND receiver=?", new String[]{"incomingCall", receiver});
+		return n > 0;
+	}
+	public synchronized boolean deleteIncomingAudioCalls(String sender) {
+		int n = getWritableDatabase().delete("messages", "type=? AND sender=?", new String[]{"incomingCall", sender});
+		return n > 0;
+	}
 
 	public synchronized void clearIncomingMessageCount(String address) {
 		getWritableDatabase().execSQL("UPDATE contacts SET pending=0 WHERE address=?", new String[]{address});
