@@ -717,7 +717,7 @@ public class ChatActivity extends AppCompatActivity {
 		client.setStatusListener(null);
 		super.onPause();
 	}
-	
+
 	private String date(String str) {
 		long t;
 		try {
