@@ -603,7 +603,10 @@ public class ChatActivity extends AppCompatActivity {
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+		if (requestCode == READ_EXTERNAL_STORAGE && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to read external storage. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+		if (requestCode == RECORD_AUDIO && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to record audio. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
 		if (requestCode == REQUEST_RECORD_AUDIO && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
 			Toast.makeText(this, "The app was not allowed to record audio. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
 	}
