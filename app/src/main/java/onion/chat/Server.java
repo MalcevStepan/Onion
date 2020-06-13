@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 
 public class Server {
@@ -51,16 +52,14 @@ public class Server {
 		new Thread() {
 			@Override
 			public void run() {
-				while (true) {
-					LocalServerSocket ss = serverSocket;
-					if (ss == null) break;
+				while (serverSocket != null) {
 					log("waiting for connection");
 					final LocalSocket ls;
 					try {
-						ls = ss.accept();
+						ls = serverSocket.accept();
 						if (BuildConfig.DEBUG) log("accept");
-					} catch (IOException ex) {
-						throw new Error(ex);
+					} catch (Exception ignore) {
+						break;
 					}
 					if (ls == null) {
 						log("no socket");
