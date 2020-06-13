@@ -598,6 +598,7 @@ public class MainActivity extends AppCompatActivity
 	@Override
 	protected void onResume() {
 		super.onResume();
+		Log.i("MAIN", "onResume");
 		tor.setListener(() -> {
 			update();
 			send();

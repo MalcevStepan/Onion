@@ -294,13 +294,13 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		disconnect();
+		new Thread(this::disconnect).start();
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		disconnect();
+		new Thread(this::disconnect).start();
 	}
 
 	@Override
