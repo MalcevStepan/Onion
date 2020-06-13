@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import java.io.File;
@@ -37,12 +38,13 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	Sock sock;
 	InputStream in;
 	OutputStream out;
-	static int rateInHz = 8000, channelConfig = AudioFormat.CHANNEL_IN_MONO, audioFormat = AudioFormat.ENCODING_PCM_8BIT,
-			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, audioFormat);
+	static int rateInHz = 8000, channelConfig = AudioFormat.CHANNEL_IN_MONO, audioFormat = AudioFormat.ENCODING_PCM_16BIT,
+			bufferSize = AudioRecord.getMinBufferSize(rateInHz, channelConfig, AudioFormat.ENCODING_PCM_16BIT);
 	String LOG_TAG = "AUDIO_CALL";
 	boolean isConnected;
-	AudioTrack audioReceived, beepCall;
-	AudioRecord audioRecord;
+	AudioTrack audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+	AudioTrack beepCall = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+	AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, rateInHz, channelConfig, audioFormat, bufferSize);
 
 	Thread serverThread = new Thread() {
 		@Override
@@ -120,9 +122,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		if (sensor != null)
 			sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 
-		audioReceived = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
-		beepCall = new AudioTrack(AudioManager.STREAM_VOICE_CALL, rateInHz, AudioFormat.CHANNEL_OUT_MONO, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
-		audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, rateInHz, channelConfig, audioFormat, bufferSize);
 		setContentView(R.layout.activity_audio_call);
 		hangup = findViewById(R.id.hangup);
 		pickup = findViewById(R.id.pickup);
@@ -179,6 +178,15 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		byte[] inbuff = new byte[bufferSize];
 		new Thread(() -> {
 			Log.i(LOG_TAG, "Starting record");
+			if (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED)
+				Toast.makeText(this, "Wait for record initialization", Toast.LENGTH_SHORT).show();
+			while (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 			audioRecord.startRecording();
 			while (isConnected) {
 				audioRecord.read(outbuff, 0, bufferSize);
@@ -195,6 +203,15 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 		// RECEIVING AUDIO CALL
 		new Thread(() -> {
 			Log.i(LOG_TAG, "Starting receiving");
+			if (audioReceived.getState() == AudioTrack.STATE_UNINITIALIZED)
+				Toast.makeText(this, "Wait for audio receive initialization", Toast.LENGTH_SHORT).show();
+			while (audioReceived.getState() == AudioTrack.STATE_UNINITIALIZED) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 			audioReceived.play();
 			while (isConnected) {
 				try {
@@ -202,7 +219,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 					if (in != null)
 						len = in.read(inbuff);
 					if (len > 1) {
-						audioVoice(inbuff);
+						//audioVoice(inbuff);
 						try {
 							audioReceived.write(inbuff, 0, bufferSize);
 						} catch (IllegalStateException ignored) {
@@ -217,6 +234,7 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				}
 			}
 		}).start();
+
 	}
 
 	private void disconnect() {

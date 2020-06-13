@@ -78,6 +78,7 @@ public class ChatActivity extends AppCompatActivity {
 	public static final int GALLERY_SUCCESS = 1;
 	public static final int TAKE_PHOTO_SUCCESS = 2;
 	public static final int CAPTURE_SUCCESS = 3;
+	private final int REQUEST_RECORD_AUDIO = 12;
 
 	private MediaRecorder mediaRecorder;
 	private MediaPlayer mediaPlayer;
@@ -599,6 +600,14 @@ public class ChatActivity extends AppCompatActivity {
 	}
 
 	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+		if (requestCode == REQUEST_RECORD_AUDIO && !(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED))
+			Toast.makeText(this, "The app was not allowed to record audio. Hence, it cannot function properly. Please consider granting it this permission", Toast.LENGTH_LONG).show();
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.phone_call:
@@ -607,7 +616,7 @@ public class ChatActivity extends AppCompatActivity {
 						!= PackageManager.PERMISSION_GRANTED)
 					ActivityCompat.requestPermissions(this,
 							new String[]{Manifest.permission.RECORD_AUDIO},
-							1);
+							REQUEST_RECORD_AUDIO);
 				else if (tor.isReady()) {
 					db.addPendingOutgoingMessage(sender, address, "incomingCall", new byte[]{1});
 					sendPendingAndUpdate("call");
@@ -616,7 +625,7 @@ public class ChatActivity extends AppCompatActivity {
 				} else if (!tor.isReady())
 					Toast.makeText(this, "Tor isn't ready", Toast.LENGTH_SHORT).show();
 				return true;
-			case R.id.update_tor:
+			/*case R.id.update_tor:
 				tor.kill();
 				tor.close();
 				Tor.getInstance(this);
@@ -624,7 +633,8 @@ public class ChatActivity extends AppCompatActivity {
 					if (!client.isBusy())
 						sendPendingAndUpdate("resume");
 				}));
-				return true;
+				Toast.makeText(this, "Reconnect to tor", Toast.LENGTH_SHORT).show();
+				return true;*/
 		}
 		return super.onOptionsItemSelected(item);
 	}
