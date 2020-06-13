@@ -72,8 +72,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import onion.blog.MainBlogActivity;
-
 public class MainActivity extends AppCompatActivity
 		implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -105,7 +103,7 @@ public class MainActivity extends AppCompatActivity
 
 		setContentView(R.layout.activity_main);
 		Toolbar toolbar = findViewById(R.id.toolbar);
-		torStatusView  = findViewById(R.id.torStatusView);
+		torStatusView = findViewById(R.id.torStatusView);
 		setSupportActionBar(toolbar);
 
 		FloatingActionButton fab = findViewById(R.id.fab);
@@ -630,9 +628,8 @@ public class MainActivity extends AppCompatActivity
 		DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		if (drawer.isDrawerOpen(GravityCompat.START)) {
 			drawer.closeDrawer(GravityCompat.START);
-		} else {
+		} else
 			super.onBackPressed();
-		}
 	}
 
     /*
@@ -736,18 +733,6 @@ public class MainActivity extends AppCompatActivity
 
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.piramid_id:
-				startActivity(new Intent(this, MainBlogActivity.class));
-				break;
-			default:
-				break;
-		}
 		return true;
 	}
 

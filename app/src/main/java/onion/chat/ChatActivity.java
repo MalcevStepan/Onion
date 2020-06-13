@@ -717,12 +717,7 @@ public class ChatActivity extends AppCompatActivity {
 		client.setStatusListener(null);
 		super.onPause();
 	}
-
-	@Override
-	public void onBackPressed() {
-
-	}
-
+	
 	private String date(String str) {
 		long t;
 		try {
