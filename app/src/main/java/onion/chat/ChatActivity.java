@@ -616,14 +616,15 @@ public class ChatActivity extends AppCompatActivity {
 				} else if (!tor.isReady())
 					Toast.makeText(this, "Tor isn't ready", Toast.LENGTH_SHORT).show();
 				return true;
-			/*case R.id.update_tor:
+			case R.id.update_tor:
+				tor.kill();
 				tor.close();
-				torStatusView.update();
+				Tor.getInstance(this);
 				tor.setListener(() -> runOnUiThread(() -> {
 					if (!client.isBusy())
 						sendPendingAndUpdate("resume");
 				}));
-				return true;*/
+				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
