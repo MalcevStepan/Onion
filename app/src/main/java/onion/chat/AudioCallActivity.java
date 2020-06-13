@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketException;
 
 public class AudioCallActivity extends AppCompatActivity implements SensorEventListener {
 	String socketName, receiver, sender;
@@ -49,37 +50,36 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	Thread serverThread = new Thread() {
 		@Override
 		public void run() {
-			LocalServerSocket ss = serverSocket;
-			if (ss != null)
-				while (true) {
-					Log.i(LOG_TAG, "waiting response");
-					final LocalSocket ls;
-					try {
-						ls = ss.accept();
-						if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
-					} catch (IOException ex) {
-						throw new Error(ex);
-					}
-					Log.i(LOG_TAG, "new connection");
-					try {
-						out = ls.getOutputStream();
-						in = ls.getInputStream();
-						byte[] b = new byte[1];
-						if (in.read(b) == 1) {
-							Log.i(LOG_TAG, "getting response");
-							if (b[0] == 1) {
-								out.write(new byte[]{1});
-								out.flush();
-								isConnected = true;
-								runOnUiThread(() -> status.setText("Connected"));
-								startAudioCallThreads();
-								break;
-							} else if (b[0] == 0) disconnect();
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+			while (serverSocket != null) {
+				Log.i(LOG_TAG, "waiting response");
+				final LocalSocket ls;
+				try {
+					ls = serverSocket.accept();
+					if (BuildConfig.DEBUG) Log.i(LOG_TAG, "accept");
+				} catch (Exception ignore) {
+					break;
 				}
+
+				Log.i(LOG_TAG, "new connection");
+				try {
+					out = ls.getOutputStream();
+					in = ls.getInputStream();
+					byte[] b = new byte[1];
+					if (in.read(b) == 1) {
+						Log.i(LOG_TAG, "getting response");
+						if (b[0] == 1) {
+							out.write(new byte[]{1});
+							out.flush();
+							isConnected = true;
+							runOnUiThread(() -> status.setText("Connected"));
+							startAudioCallThreads();
+							break;
+						} else if (b[0] == 0) disconnect();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	};
 	Thread receiverThread = new Thread(() -> {
