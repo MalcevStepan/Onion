@@ -128,22 +128,20 @@ public class HostService extends Service {
 			Server.getInstance(HostService.this);
 		}
 
-		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
 		public void onLost(Network network) {
 			Log.i(TAG, "Losing network connection");
-			tor.clearFiles();
+			tor.kill();
 			tor.close();
-			server.close();
+			//server.close();
 		}
 
-		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
 		public void onUnavailable() {
 			Log.i(TAG, "Network connection is unavailable");
-			tor.clearFiles();
+			tor.kill();
 			tor.close();
-			server.close();
+			//server.close();
 		}
 	}
 }

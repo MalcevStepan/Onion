@@ -77,7 +77,7 @@ public class Tor {
 		}.start();
 	}
 
-	private synchronized void startTorConnection() {
+	private void startTorConnection() {
 		try {
 			//test();
 
@@ -130,9 +130,9 @@ public class Tor {
 				} catch (IOException e) {
 					break;
 				}
+				log(line);
 				if (line == null) break;
 				if (line.contains("Error")) break;
-				log(line);
 
 				status = line;
 
@@ -274,19 +274,14 @@ public class Tor {
 		return Utils.filestr(new File(getServiceDir(), "private_key"));
 	}
 
-	@RequiresApi(api = Build.VERSION_CODES.O)
-	public void clearFiles() {
-		try {
-			if (torreader != null)
-				torreader.close();
-		} catch (IOException ignored) {
-		}
-		if (tor != null)
-			if (tor.isAlive())
-				tor.destroy();
+
+	public void kill() {
+		tor.destroy();
 		context.getFileStreamPath(torname).delete();
 		tordir.delete();
 		torsrv.delete();
+		Native.killTor();
+		Log.i("Tor", "Tor killed");
 	}
 
 	RSAPrivateKey getPrivateKey() {

@@ -58,8 +58,8 @@ Java_onion_chat_AudioCallActivity_audioVoice(JNIEnv *env, jclass clazz, jbyteArr
 	env->SetByteArrayRegion(input, 0, len, reinterpret_cast<jbyte *>(buffer));
 }
 
-JNIEXPORT void JNICALL Java_onion_chat_Native_killTor(JNIEnv *env) {
-
+JNIEXPORT void JNICALL Java_onion_chat_Native_killTor(JNIEnv *env, jclass clazz) {
+	__android_log_print(ANDROID_LOG_INFO, "PROCESS", "TRYING TO KILL PROCESS\n");
 	DIR *d = opendir("/proc");
 	dirent *de;
 

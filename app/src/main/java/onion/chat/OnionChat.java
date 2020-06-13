@@ -6,7 +6,7 @@ public class OnionChat extends Application {
 
 	@Override
 	public void onCreate() {
-		Thread.setDefaultUncaughtExceptionHandler(new CrashCatcher(this));
+		//Thread.setDefaultUncaughtExceptionHandler(new CrashCatcher(this));
 		super.onCreate();
 	}
 }
