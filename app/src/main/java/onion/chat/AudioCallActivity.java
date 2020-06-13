@@ -260,7 +260,8 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 			try {
 				in.close();
 				in = null;
-				out.close();
+				if (out != null)
+					out.close();
 				out = null;
 			} catch (IOException ex) {
 				ex.printStackTrace();
