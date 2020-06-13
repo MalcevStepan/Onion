@@ -13,7 +13,7 @@ public class OnionChat extends Application {
 	}
 
 	static {
-		loadLibraryByName("blog_app");
+		loadLibraryByName("app");
 	}
 
 	static int tryLoadCounter = 5;
@@ -26,7 +26,7 @@ public class OnionChat extends Application {
 			// Output expected UnsatisfiedLinkErrors.
 			if (tryLoadCounter > 0) {
 				tryLoadCounter--;
-				loadLibraryByName("easybeat_android");
+				loadLibraryByName("app");
 			}
 		} catch (Error | Exception ignored) {
 		}
