@@ -304,11 +304,6 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 	}
 
 	@Override
-	public void onBackPressed() {
-
-	}
-
-	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
 			if (event.values[0] >= -4 && event.values[0] <= 4) {
@@ -316,13 +311,11 @@ public class AudioCallActivity extends AppCompatActivity implements SensorEventL
 				params.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 				params.screenBrightness = 0;
 				getWindow().setAttributes(params);
-				if (hangup != null) hangup.setEnabled(false);
 			} else {
 				WindowManager.LayoutParams params = getWindow().getAttributes();
 				params.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 				params.screenBrightness = 1;
 				getWindow().setAttributes(params);
-				if (hangup != null) hangup.setEnabled(true);
 			}
 		}
 	}
