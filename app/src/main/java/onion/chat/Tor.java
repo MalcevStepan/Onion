@@ -48,7 +48,7 @@ public class Tor {
 	private static String torname = "ctor";
 	private static String tordirname = "tordata";
 	private static String torservdir = "torserv";
-	private static Tor instance = null;
+	static Tor instance = null;
 	private Context context;
 	private int port = -1;
 	private String domain = "";
@@ -82,7 +82,7 @@ public class Tor {
 			//test();
 
 			log("kill");
-			Native.killTor();
+			//Native.killTor();
 
 			log("install");
 			extractFile(context, R.raw.tor, torname);

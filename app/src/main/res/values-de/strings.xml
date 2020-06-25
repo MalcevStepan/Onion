@@ -76,7 +76,7 @@
     <string name="sounds">Geräusche</string>
     <string name="sounds_summary">Geräusch abspielen, wenn eine neue Nachricht empfangen wurde.</string>
     <string name="no_contacts">Keine Kontakte</string>
-    <string name="app_name">Timmess</string>
+    <string name="app_name">TorChat</string>
 
 
 </resources>

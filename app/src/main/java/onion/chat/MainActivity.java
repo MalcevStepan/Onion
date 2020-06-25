@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity
 	private final int REQUEST_RECORD_AUDIO = 12;
 	private final int RECORD_AUDIO = 0;
 	private final int READ_EXTERNAL_STORAGE = 5;
+	private final int ACCESS_NETWORK_STATE = 1;
 
 	int REQUEST_QR = 12;
 
@@ -901,6 +902,9 @@ public class MainActivity extends AppCompatActivity
 		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
 			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
 					RECORD_AUDIO);
+		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED)
+			ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE},
+					ACCESS_NETWORK_STATE);
 	}
 
 	@Override

@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.SocketException;
 
 public class AudioCallActivity extends AppCompatActivity implements SensorEventListener {
 	String socketName, receiver, sender;

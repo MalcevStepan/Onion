@@ -69,13 +69,13 @@ public class HostService extends Service {
 		tor = Tor.getInstance(this);
 		client = Client.getInstance(this);
 
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	/*	ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkRequest nr = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build();
-		NetworkRequest nr2 = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET).build();
+		//NetworkRequest nr2 = new NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET).build();
 		if (cm != null) {
 			cm.registerNetworkCallback(nr, new ConnectionCallback());
-			cm.registerNetworkCallback(nr2, new ConnectionCallback());
-		} else Log.i(TAG, "ConnectivityManager is unavailable");
+			//cm.registerNetworkCallback(nr2, new ConnectionCallback());
+		} else Log.i(TAG, "ConnectivityManager is unavailable");*/
 
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {

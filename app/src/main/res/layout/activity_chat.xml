@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" tools:context="onion.chat.ChatActivity"
     android:orientation="vertical"
-    android:background="@drawable/ic_background">
+    android:background="#40739F">
 
     <onion.chat.TorStatusView
         android:id="@+id/torStatusView"

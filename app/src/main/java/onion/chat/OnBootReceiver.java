@@ -10,17 +10,17 @@
 
 package onion.chat;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
 public class OnBootReceiver extends BroadcastReceiver {
 
+    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     @Override
     public void onReceive(Context context, Intent intent) {
-
         context.startService(new Intent(context, HostService.class));
-
     }
 
 }

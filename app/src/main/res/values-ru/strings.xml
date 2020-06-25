@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Timmess</string>
+    <string name="app_name">TorChat</string>
     <string name="about">Подробней</string>
     <string name="add_contact">Добавить контакт</string>
     <string name="rate">Оценить</string>

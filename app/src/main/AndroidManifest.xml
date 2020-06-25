@@ -24,6 +24,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
+        <activity android:name=".VideoCallActivity"></activity>
         <activity android:name=".AudioCallActivity" />
         <activity
             android:name=".MainActivity"
@@ -70,6 +71,18 @@
 
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".OnInternetReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"
+                    tools:ignore="BatteryLife" />
+            </intent-filter>
+
         </receiver>
 
         <activity

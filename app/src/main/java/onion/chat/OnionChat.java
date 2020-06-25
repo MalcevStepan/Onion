@@ -7,7 +7,7 @@ public class OnionChat extends MultiDexApplication {
 
 	@Override
 	public void onCreate() {
-		Thread.setDefaultUncaughtExceptionHandler(new CrashCatcher(this));
+	//	Thread.setDefaultUncaughtExceptionHandler(new CrashCatcher(this));
 		super.onCreate();
 	}
 
